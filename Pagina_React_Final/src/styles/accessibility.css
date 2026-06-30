@@ -1,0 +1,728 @@
+/**
+ * accessibility.css
+ * Estilos para el componente de menú de accesibilidad
+ * Diseño moderno, limpio y responsive
+ */
+
+/* ============================================
+   VARIABLES DE DISEÑO (Custom Properties CSS)
+   ============================================ */
+
+:root {
+  /* Colores */
+  --accessibility-primary: #0066cc;
+  --accessibility-primary-hover: #0052a3;
+  --accessibility-secondary: #f5f5f5;
+  --accessibility-text: #333333;
+  --accessibility-border: #ddd;
+  --accessibility-shadow: rgba(0, 0, 0, 0.1);
+  --accessibility-success: #28a745;
+  
+  /* Espaciado */
+  --accessibility-spacing-xs: 4px;
+  --accessibility-spacing-sm: 8px;
+  --accessibility-spacing-md: 12px;
+  --accessibility-spacing-lg: 16px;
+  --accessibility-spacing-xl: 24px;
+  
+  /* Bordes */
+  --accessibility-border-radius: 8px;
+  --accessibility-border-width: 2px;
+  
+  /* Transiciones */
+  --accessibility-transition: all 0.3s ease-in-out;
+}
+
+/* ============================================
+   BOTÓN FLOTANTE DE ACCESIBILIDAD
+   ============================================ */
+
+.accessibility-button {
+  /* Posición fija en esquina inferior derecha */
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 2147483647; /* Máximo z-index posible - siempre visible */
+  
+  /* Estilos de botón: fondo blanco, borde azul */
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 3px solid #0066cc;
+  background-color: #ffffff;
+  color: #0066cc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; /* Evita que se comprima */
+  
+  /* Sombra y efectos */
+  box-shadow: 0 4px 14px rgba(0, 102, 204, 0.25);
+  transition: var(--accessibility-transition);
+  
+  /* Accesibilidad */
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.accessibility-button:hover {
+  background-color: #e8f0fb;
+  border-color: #0052a3;
+  box-shadow: 0 6px 18px rgba(0, 102, 204, 0.35);
+  transform: scale(1.07);
+}
+
+.accessibility-button:focus {
+  outline: 3px solid #0066cc;
+  outline-offset: 3px;
+}
+
+.accessibility-button:active {
+  transform: scale(0.97);
+}
+
+/* Ícono dentro del botón */
+.accessibility-button svg {
+  width: 36px;
+  height: 36px;
+  transition: var(--accessibility-transition);
+}
+
+/* Responsive: botones más pequeños en móvil */
+@media (max-width: 768px) {
+  .accessibility-button {
+    bottom: 1rem;
+    right: 1rem;
+    width: 52px;
+    height: 52px;
+  }
+  
+  .accessibility-button svg {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+/* ============================================
+   PANEL DE ACCESIBILIDAD
+   ============================================ */
+
+.accessibility-panel {
+  /* Posición fija */
+  position: fixed;
+  bottom: 7rem;
+  right: 2rem;
+  z-index: 10000; /* Sobre el botón */
+  
+  /* Tamaño y estilos - Cálculo dinámico de altura */
+  width: 350px;
+  max-height: calc(100vh - 10rem); /* Deja espacio para el botón + margen */
+  min-height: 200px; /* Altura mínima para usabilidad */
+  background-color: white;
+  border-radius: var(--accessibility-border-radius);
+  border: var(--accessibility-border-width) solid var(--accessibility-border);
+  box-shadow: 0 8px 24px var(--accessibility-shadow);
+  
+  /* Flex column para mejor control de layout */
+  display: flex;
+  flex-direction: column;
+  
+  /* Estado inicial: cerrado */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px) translateX(10px);
+  transition: var(--accessibility-transition);
+  overflow: hidden; /* Importante: evita que contenido se salga */
+}
+
+/* Estado: panel abierto */
+.accessibility-panel.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) translateX(0);
+}
+
+/* Contenido del panel */
+.accessibility-panel-content {
+  overflow-y: auto;
+  overflow-x: hidden; /* Sin scroll horizontal */
+  flex: 1;
+  min-height: 0; /* Permite que flex-item respete max-height del parent */
+  padding: var(--accessibility-spacing-lg);
+  
+  /* Scrollbar personalizada */
+  scrollbar-width: thin;
+  scrollbar-color: var(--accessibility-primary) var(--accessibility-secondary);
+}
+
+/* Estilos del scrollbar para navegadores webkit */
+.accessibility-panel-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.accessibility-panel-content::-webkit-scrollbar-track {
+  background: var(--accessibility-secondary);
+  border-radius: var(--accessibility-border-radius);
+}
+
+.accessibility-panel-content::-webkit-scrollbar-thumb {
+  background: var(--accessibility-primary);
+  border-radius: var(--accessibility-border-radius);
+}
+
+.accessibility-panel-content::-webkit-scrollbar-thumb:hover {
+  background: var(--accessibility-primary-hover);
+}
+
+/* Responsive: panel más pequeño en móvil */
+@media (max-width: 768px) {
+  .accessibility-panel {
+    bottom: 5rem;
+    right: 1rem;
+    width: 90%;
+    max-width: 320px;
+    max-height: calc(100vh - 8rem); /* Ajustado para móvil */
+  }
+}
+
+/* ============================================
+   SECCIONES DEL PANEL
+   ============================================ */
+
+.accessibility-section {
+  margin-bottom: var(--accessibility-spacing-lg);
+  padding-bottom: var(--accessibility-spacing-lg);
+  border-bottom: 1px solid var(--accessibility-border);
+}
+
+.accessibility-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Títulos de sección */
+.accessibility-section h3 {
+  margin: 0 0 var(--accessibility-spacing-md) 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--accessibility-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  word-break: break-word; /* Permite que las palabras se corten */
+  overflow-wrap: break-word; /* Envuelve palabras largas */
+  line-height: 1.3; /* Altura de línea reducida para títulos */
+}
+
+/* Subsección dentro de legibilidad */
+.accessibility-subsection {
+  margin-bottom: var(--accessibility-spacing-md);
+}
+
+.accessibility-subsection label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--accessibility-text);
+  margin-bottom: var(--accessibility-spacing-sm);
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.4;
+}
+
+/* ============================================
+   CONTROLES Y BOTONES
+   ============================================ */
+
+.accessibility-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--accessibility-spacing-sm);
+  align-items: center;
+}
+
+/* Botones de control genéricos */
+.accessibility-btn {
+  padding: var(--accessibility-spacing-sm) var(--accessibility-spacing-md);
+  border: var(--accessibility-border-width) solid var(--accessibility-border);
+  background-color: var(--accessibility-secondary);
+  color: var(--accessibility-text);
+  border-radius: var(--accessibility-border-radius);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: var(--accessibility-transition);
+  white-space: normal; /* Permite que el texto haga wrap */
+  word-break: break-word;
+  overflow-wrap: break-word;
+  min-height: 2.5rem; /* Altura mínima para accesibilidad */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto; /* Flexiona para aprovechar espacio */
+}
+
+.accessibility-btn:hover {
+  background-color: var(--accessibility-primary);
+  color: white;
+  border-color: var(--accessibility-primary);
+}
+
+.accessibility-btn:focus {
+  outline: 2px solid var(--accessibility-primary);
+  outline-offset: 2px;
+}
+
+.accessibility-btn:active {
+  transform: scale(0.98);
+}
+
+/* Botón activo (aplicado) */
+.accessibility-btn.active {
+  background-color: var(--accessibility-primary);
+  color: white;
+  border-color: var(--accessibility-primary);
+}
+
+/* Botones de reset */
+.accessibility-reset-btn {
+  padding: var(--accessibility-spacing-sm) var(--accessibility-spacing-md);
+  border: var(--accessibility-border-width) solid var(--accessibility-success);
+  background-color: transparent;
+  color: var(--accessibility-success);
+  border-radius: var(--accessibility-border-radius);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: var(--accessibility-transition);
+  white-space: normal; /* Permite wrap */
+  word-break: break-word;
+  overflow-wrap: break-word;
+  min-height: 2.5rem; /* Altura mínima */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto; /* Flexiona */
+}
+
+.accessibility-reset-btn:hover {
+  background-color: var(--accessibility-success);
+  color: white;
+}
+
+.accessibility-reset-btn:focus {
+  outline: 2px solid var(--accessibility-success);
+  outline-offset: 2px;
+}
+
+.accessibility-reset-btn.full-width {
+  width: 100%;
+  display: block;
+}
+
+/* Valor mostrado (porcentaje de tamaño) */
+.accessibility-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+  padding: var(--accessibility-spacing-sm) var(--accessibility-spacing-md);
+  text-align: center;
+  font-weight: 600;
+  color: var(--accessibility-primary);
+  font-size: 0.9rem;
+  background-color: var(--accessibility-secondary);
+  border-radius: var(--accessibility-border-radius);
+  flex: 1 1 auto;
+}
+
+/* ============================================
+   SLIDERS (RANGES)
+   ============================================ */
+
+.accessibility-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--accessibility-secondary);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+/* Thumb del slider (navegadores webkit) */
+.accessibility-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accessibility-primary);
+  cursor: pointer;
+  box-shadow: 0 2px 4px var(--accessibility-shadow);
+  transition: var(--accessibility-transition);
+}
+
+.accessibility-slider::-webkit-slider-thumb:hover {
+  background: var(--accessibility-primary-hover);
+  box-shadow: 0 4px 8px var(--accessibility-shadow);
+}
+
+.accessibility-slider::-webkit-slider-thumb:focus {
+  outline: 2px solid var(--accessibility-primary);
+  outline-offset: 2px;
+}
+
+/* Thumb del slider (Firefox) */
+.accessibility-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accessibility-primary);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px var(--accessibility-shadow);
+  transition: var(--accessibility-transition);
+}
+
+.accessibility-slider::-moz-range-thumb:hover {
+  background: var(--accessibility-primary-hover);
+  box-shadow: 0 4px 8px var(--accessibility-shadow);
+}
+
+.accessibility-slider::-moz-range-thumb:focus {
+  outline: 2px solid var(--accessibility-primary);
+  outline-offset: 2px;
+}
+
+/* Track del slider */
+.accessibility-slider::-webkit-slider-runnable-track {
+  background: var(--accessibility-secondary);
+  height: 6px;
+  border-radius: 3px;
+}
+
+.accessibility-slider::-moz-range-track {
+  background: transparent;
+  border: none;
+}
+
+/* ============================================
+   TOGGLES (CHECKBOXES)
+   ============================================ */
+
+.accessibility-toggle {
+  margin-bottom: var(--accessibility-spacing-md);
+}
+
+.accessibility-toggle label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.9rem;
+  color: var(--accessibility-text);
+  transition: var(--accessibility-transition);
+}
+
+.accessibility-toggle label:hover {
+  color: var(--accessibility-primary);
+}
+
+/* Checkbox personalizado */
+.accessibility-toggle input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: var(--accessibility-border-width) solid var(--accessibility-border);
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  margin-right: var(--accessibility-spacing-md);
+  transition: var(--accessibility-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.accessibility-toggle input[type="checkbox"]:hover {
+  border-color: var(--accessibility-primary);
+  background-color: rgba(0, 102, 204, 0.05);
+}
+
+.accessibility-toggle input[type="checkbox"]:focus {
+  outline: 2px solid var(--accessibility-primary);
+  outline-offset: 2px;
+}
+
+/* Checkbox marcado */
+.accessibility-toggle input[type="checkbox"]:checked {
+  background-color: var(--accessibility-primary);
+  border-color: var(--accessibility-primary);
+}
+
+/* Marca dentro del checkbox */
+.accessibility-toggle input[type="checkbox"]:checked::after {
+  content: '✓';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+/* ============================================
+   BOTÓN RESTABLECER TODO
+   ============================================ */
+
+.accessibility-reset-all-btn {
+  width: 100%;
+  padding: var(--accessibility-spacing-md) var(--accessibility-spacing-lg);
+  margin-top: var(--accessibility-spacing-lg);
+  margin-bottom: var(--accessibility-spacing-md); /* Espacio inferior - importante */
+  border: 2px solid #e74c3c;
+  background-color: transparent;
+  color: #e74c3c;
+  border-radius: var(--accessibility-border-radius);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: var(--accessibility-transition);
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; /* No se comprime */
+}
+
+.accessibility-reset-all-btn:hover {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.accessibility-reset-all-btn:focus {
+  outline: 2px solid #e74c3c;
+  outline-offset: 2px;
+}
+
+.accessibility-reset-all-btn:active {
+  transform: scale(0.98);
+}
+
+/* Separador visual entre content y botón */
+.accessibility-panel-content + .accessibility-reset-all-btn {
+  border-top: 1px solid var(--accessibility-border);
+}
+
+/* ============================================
+   GARANTÍAS DE CONTENIMIENTO (No overflow)
+   ============================================ */
+
+/* Asegurar que todo el contenido del panel se contiene */
+.accessibility-panel-content {
+  box-sizing: border-box;
+}
+
+.accessibility-panel-content section,
+.accessibility-panel-content button {
+  box-sizing: border-box;
+}
+
+/* Prevenir que los controles se salgan del ancho */
+.accessibility-controls,
+.accessibility-section,
+.accessibility-subsection {
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Garantizar que los sliders no se salgan */
+.accessibility-slider {
+  max-width: 100%;
+}
+
+/* Garantizar que los labels no se salgan */
+.accessibility-subsection label,
+.accessibility-section h3,
+.accessibility-toggle label {
+  max-width: 100%;
+  box-sizing: border-box;
+  word-wrap: break-word;
+}
+
+/* ============================================
+   APLICADORES DE ACCESIBILIDAD
+   (Clases agregadas al documento)
+   ============================================ */
+
+/* Fuente amigable para dislexia */
+.accessibility-dyslexia-font {
+  font-family: 'Dyslexie', 'OpenDyslexic', 'Arial', sans-serif !important;
+}
+
+/* Resaltado de enlaces */
+.accessibility-highlight-links a {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 4px !important;
+  background-color: rgba(255, 255, 0, 0.2) !important;
+  padding: 2px 4px !important;
+}
+
+/* Resaltado de encabezados */
+.accessibility-highlight-headings h1,
+.accessibility-highlight-headings h2,
+.accessibility-highlight-headings h3,
+.accessibility-highlight-headings h4,
+.accessibility-highlight-headings h5,
+.accessibility-highlight-headings h6 {
+  background-color: rgba(102, 204, 255, 0.2) !important;
+  padding: 4px 8px !important;
+  border-left: 4px solid var(--accessibility-primary) !important;
+}
+
+/* Cursor grande */
+.accessibility-large-cursor {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="%230066cc" opacity="0.5"/><circle cx="16" cy="16" r="14" fill="none" stroke="%230066cc" stroke-width="2"/></svg>') 16 16, auto !important;
+}
+
+/* Detener animaciones y transiciones */
+.accessibility-no-animations,
+.accessibility-no-animations * {
+  animation: none !important;
+  transition: none !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+}
+
+/* Alto contraste adicional */
+.accessibility-high-contrast {
+  color-scheme: light;
+}
+
+.accessibility-high-contrast * {
+  border-color: #000 !important;
+}
+
+/* Invertido */
+.accessibility-inverted {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+/* Escala de grises */
+.accessibility-grayscale {
+  filter: grayscale(1) !important;
+}
+
+/* ============================================
+   RESPONSIVE - TABLET
+   ============================================ */
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  .accessibility-button {
+    width: 55px;
+    height: 55px;
+  }
+  
+  .accessibility-panel {
+    width: 320px;
+    max-height: calc(100vh - 9rem);
+  }
+}
+
+/* ============================================
+   RESPONSIVE - MÓVIL
+   ============================================ */
+
+@media (max-width: 480px) {
+  .accessibility-button {
+    width: 48px;
+    height: 48px;
+    bottom: 0.75rem;
+    right: 0.75rem;
+  }
+  
+  .accessibility-button svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .accessibility-panel {
+    width: 95%;
+    max-height: calc(100vh - 7rem); /* Dinámico basado en viewport */
+    bottom: 4rem;
+    right: 50%;
+    transform: translateX(50%);
+  }
+  
+  .accessibility-panel.open {
+    transform: translateX(50%) translateY(0);
+  }
+  
+  .accessibility-controls {
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  
+  .accessibility-btn,
+  .accessibility-reset-btn {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    min-height: 2rem;
+    flex: 1 1 calc(50% - 2px);
+  }
+  
+  .accessibility-section h3 {
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+  }
+}
+
+/* ============================================
+   MODO OSCURO (si el usuario prefiere)
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accessibility-secondary: #2a2a2a;
+    --accessibility-text: #e0e0e0;
+    --accessibility-border: #444;
+    --accessibility-shadow: rgba(0, 0, 0, 0.3);
+  }
+  
+  .accessibility-panel {
+    background-color: #1e1e1e;
+    color: var(--accessibility-text);
+  }
+  
+  .accessibility-btn {
+    background-color: #333;
+    color: var(--accessibility-text);
+  }
+  
+  .accessibility-toggle input[type="checkbox"] {
+    background-color: #2a2a2a;
+    border-color: #444;
+  }
+}
+
+/* ============================================
+   PREFIERE MOVIMIENTO REDUCIDO
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .accessibility-button,
+  .accessibility-btn,
+  .accessibility-panel,
+  .accessibility-toggle input[type="checkbox"] {
+    transition: none !important;
+  }
+}
