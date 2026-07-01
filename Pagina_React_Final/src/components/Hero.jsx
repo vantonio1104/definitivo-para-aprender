@@ -1,8 +1,13 @@
 // src/components/Hero.jsx
 // Reemplaza a la sección #inicio + .stats-bar del index.html original.
-// Contenido 100% estático, sin lógica de main.js asociada.
+// Se modificó para aceptar onNavigate y controlar el ruteo interno por estados.
 
-export default function Hero() {
+export default function Hero({ onNavigate }) {
+  const handleNav = (e, page) => {
+    e.preventDefault();
+    onNavigate?.(page);
+  };
+
   return (
     <>
       <section id="inicio">
@@ -19,10 +24,18 @@ export default function Hero() {
             Prendas de lujo para quienes exigen lo mejor. Diseño, exclusividad y sofisticación en cada detalle.
           </p>
           <div className="hero-btns">
-            <a href="#catalogo" className="btn-primary">
+            <a
+              href="#catalogo"
+              className="btn-primary"
+              onClick={(e) => handleNav(e, 'catalogo')}
+            >
               Explorar Colección
             </a>
-            <a href="#perfil" className="btn-outline">
+            <a
+              href="#perfil"
+              className="btn-outline"
+              onClick={(e) => handleNav(e, 'perfil')}
+            >
               Acceso Exclusivo
             </a>
           </div>
@@ -54,3 +67,4 @@ export default function Hero() {
     </>
   );
 }
+

@@ -1,11 +1,12 @@
 // src/App.jsx
 // Reemplaza al index.html + main.js originales como punto de unión.
 // Cada sección de la página vanilla es ahora un componente; el estado
-// global (carrito, favoritos, auth, filtros, toasts) vive en hooks
-// y se pasa por props a quien lo necesite, igual que antes vivía en
-// variables globales (cart, favs, sesion, filtered) accesibles desde
-// cualquier función de main.js.
+// global (carrito, favoritos, auth, filtros, productos, toasts) vive en hooks
+// y se pasa por props a quien lo necesite.
+//
+// Modificado para implementar subpáginas mediante un enrutador basado en estado (sin dependencias externas).
 
+import { useState } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import CategoryCarousel from './components/CategoryCarousel';
@@ -15,62 +16,129 @@ import ContactForm from './components/ContactForm';
 import Checkout from './components/Checkout';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
+import FavoritesDrawer from './components/FavoritesDrawer';
+import ProductDetailMenu from './components/ProductDetailMenu';
 import Toasts from './components/Toasts';
 import AccessibilityMenu from './components/AccessibilityMenu';
+import AdminPanel from './components/AdminPanel';
 
 import { useCart } from './hooks/useCart';
 import { useFavorites } from './hooks/useFavorites';
 import { useProductFilters } from './hooks/useProductFilters';
 import { useAuth } from './hooks/useAuth';
 import { useToasts } from './hooks/useToasts';
+import { useProducts } from './hooks/useProducts';
 
 function App() {
   const { toasts, toast } = useToasts();
+  
+  // Estado para la subpágina activa: 'inicio', 'catalogo', 'perfil', 'checkout', 'admin'
+  const [currentPage, setCurrentPage] = useState('inicio');
+
+  // Estado para controlar la apertura del cajón de favoritos
+  const [isFavsOpen, setIsFavsOpen] = useState(false);
+
+  // Estado global para el producto seleccionado en el modal de detalles
+  const [selectedProductDetails, setSelectedProductDetails] = useState(null);
+
+  // Fuente de verdad de productos (localStorage, con fallback a products.js)
+  const { products, addProduct, updateProduct, deleteProduct, discountStock } = useProducts();
 
   const { cart, isOpen, count, total, addToCart, removeFromCart, changeQty, clearCart, toggleCart, closeCart } =
-    useCart(toast);
+    useCart(products, toast);
 
   const { favs, toggleFav } = useFavorites(() => toast('Agregado a favoritos ♥'));
 
-  const { category, sort, filtered, filterByCategory, setSort } = useProductFilters();
+  // Recibe el array dinámico en lugar de importar el estático
+  const { category, sort, filtered, filterByCategory, setSort } = useProductFilters(products);
 
   const { sesion, registrarUsuario, iniciarSesion, cerrarSesion } = useAuth();
 
+  const isAdmin = sesion?.activo && sesion?.usuario?.rol === 'admin';
+
+  // Maneja la compra exitosa restando el stock físico y vaciando el carrito
+  const handlePaymentSuccess = (purchasedCart) => {
+    discountStock(purchasedCart);
+    clearCart();
+    setCurrentPage('inicio'); // Redirecciona a inicio tras compra exitosa
+  };
+
+  // Al hacer clic en una categoría del carrusel, filtramos y llevamos al usuario al catálogo
+  const handleSelectCategory = (cat) => {
+    filterByCategory(cat);
+    setCurrentPage('catalogo');
+  };
+
   return (
     <>
-      <Header cartCount={count} onToggleCart={toggleCart} />
+      <Header
+        cartCount={count}
+        onToggleCart={toggleCart}
+        sesion={sesion}
+        currentPage={currentPage}
+        onChangePage={setCurrentPage}
+        favsCount={favs.size}
+        onToggleFavs={() => setIsFavsOpen((prev) => !prev)}
+      />
 
       <main>
-        <Hero />
+        {/* SUBPÁGINA: INICIO */}
+        {currentPage === 'inicio' && (
+          <>
+            <Hero onNavigate={setCurrentPage} />
+            <ContactForm />
+          </>
+        )}
 
-        <CategoryCarousel onSelectCategory={filterByCategory} />
+        {/* SUBPÁGINA: CATÁLOGO */}
+        {currentPage === 'catalogo' && (
+          <>
+            <CategoryCarousel onSelectCategory={handleSelectCategory} />
+            <ProductGrid
+              products={filtered}
+              favs={favs}
+              category={category}
+              sort={sort}
+              onFilterChange={filterByCategory}
+              onSortChange={setSort}
+              onToggleFav={toggleFav}
+              onAddToCart={addToCart}
+              onViewDetails={setSelectedProductDetails}
+            />
+          </>
+        )}
 
-        <ProductGrid
-          products={filtered}
-          favs={favs}
-          category={category}
-          sort={sort}
-          onFilterChange={filterByCategory}
-          onSortChange={setSort}
-          onToggleFav={toggleFav}
-          onAddToCart={addToCart}
-        />
+        {/* SUBPÁGINA: PERFIL */}
+        {currentPage === 'perfil' && (
+          <AuthSection
+            sesion={sesion}
+            iniciarSesion={iniciarSesion}
+            registrarUsuario={registrarUsuario}
+            cerrarSesion={cerrarSesion}
+            toast={toast}
+          />
+        )}
 
-        <AuthSection
-          sesion={sesion}
-          iniciarSesion={iniciarSesion}
-          registrarUsuario={registrarUsuario}
-          cerrarSesion={cerrarSesion}
-          toast={toast}
-        />
+        {/* SUBPÁGINA: CHECKOUT */}
+        {currentPage === 'checkout' && (
+          <Checkout cart={cart} total={total} onPaySuccess={handlePaymentSuccess} toast={toast} />
+        )}
 
-        <ContactForm />
-
-        <Checkout cart={cart} total={total} onPaySuccess={clearCart} toast={toast} />
+        {/* SUBPÁGINA: ADMIN (Protegida) */}
+        {currentPage === 'admin' && isAdmin && (
+          <AdminPanel
+            products={products}
+            onAdd={addProduct}
+            onUpdate={updateProduct}
+            onDelete={deleteProduct}
+            toast={toast}
+          />
+        )}
       </main>
 
       <Footer />
 
+      {/* Cajón lateral del carrito */}
       <CartDrawer
         cart={cart}
         isOpen={isOpen}
@@ -78,6 +146,24 @@ function App() {
         onClose={closeCart}
         onChangeQty={changeQty}
         onRemove={removeFromCart}
+      />
+
+      {/* Cajón lateral de favoritos */}
+      <FavoritesDrawer
+        favs={favs}
+        products={products}
+        isOpen={isFavsOpen}
+        onClose={() => setIsFavsOpen(false)}
+        onRemove={toggleFav}
+        onAddToCart={addToCart}
+        onViewDetails={setSelectedProductDetails}
+      />
+
+      {/* Modal global de detalles de producto */}
+      <ProductDetailMenu
+        product={selectedProductDetails}
+        onClose={() => setSelectedProductDetails(null)}
+        onAddToCart={addToCart}
       />
 
       <Toasts toasts={toasts} />
@@ -89,3 +175,4 @@ function App() {
 }
 
 export default App;
+

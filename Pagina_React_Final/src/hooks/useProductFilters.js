@@ -1,18 +1,18 @@
 // src/hooks/useProductFilters.js
 // Reemplaza a `let filtered` + filterProducts() + sortProducts() de main.js.
-// En el original, sortProducts ordenaba sobre el filtro ya aplicado;
-// aquí mantenemos category y sort como dos piezas de estado independientes
-// y derivamos la lista final con useMemo (mismo resultado, sin mutación).
+// Recibe el array de productos como argumento (en lugar de importarlo
+// directamente) para que useProducts sea la única fuente de verdad y
+// los cambios del CRUD se reflejen en tiempo real en el grid.
 
 import { useMemo, useState } from 'react';
-import { products as PRODUCTS } from '../data/products';
 
-export function useProductFilters() {
+export function useProductFilters(products = []) {
   const [category, setCategory] = useState('Todos');
   const [sort, setSort] = useState('');
 
   const filtered = useMemo(() => {
-    let list = category === 'Todos' ? [...PRODUCTS] : PRODUCTS.filter((p) => p.cat === category);
+    let list =
+      category === 'Todos' ? [...products] : products.filter((p) => p.cat === category);
 
     if (sort === 'asc') {
       list = [...list].sort((a, b) => a.price - b.price);
@@ -23,7 +23,7 @@ export function useProductFilters() {
     }
 
     return list;
-  }, [category, sort]);
+  }, [products, category, sort]);
 
   // Igual que filterProducts(cat, btn): cambia categoría y hace scroll a #productos
   const filterByCategory = (cat) => {

@@ -3,9 +3,15 @@
 // goStep2/backStep1/selectPay/formatCard/processPay/closeModal de main.js.
 // Los 3 "steps" visuales y los 2 paneles (checkoutStep1/2) se controlan
 // con un solo estado `step` en vez de display:none/block manual.
+//
+// Integración EmailJS: al confirmar la compra se arman los datos del pedido
+// y se llama a enviarCorreoPedido() de useEmailJS de forma no-bloqueante.
+// El modal de éxito se muestra inmediatamente; el toast de correo llega
+// después si el envío fue exitoso.
 
 import { useState } from 'react';
 import { formatPrice } from '../data/products';
+import { useEmailJS } from '../hooks/useEmailJS';
 
 const PAY_METHODS = ['Tarjeta Crédito', 'Tarjeta Débito', 'WebPay', 'Transferencia'];
 const CITIES = ['Santiago', 'Valparaíso', 'Viña del Mar', 'Concepción', 'Antofagasta'];
@@ -14,6 +20,7 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
   const [step, setStep] = useState(1); // 1 = datos/envío, 2 = pago
   const [showSuccess, setShowSuccess] = useState(false);
 
+  // Datos personales y de envío (paso 1)
   const [ckName, setCkName] = useState('');
   const [ckLastname, setCkLastname] = useState('');
   const [ckEmail, setCkEmail] = useState('');
@@ -22,12 +29,17 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
   const [ckCity, setCkCity] = useState(CITIES[0]);
   const [ckZip, setCkZip] = useState('');
 
+  // Datos de pago (paso 2)
   const [payMethod, setPayMethod] = useState(PAY_METHODS[0]);
   const [ckCard, setCkCard] = useState('');
   const [ckExp, setCkExp] = useState('');
   const [ckCvv, setCkCvv] = useState('');
   const [ckCardName, setCkCardName] = useState('');
 
+  // Hook de EmailJS: solo lo necesitamos para enviar el comprobante de pedido
+  const { enviarCorreoPedido } = useEmailJS();
+
+  // Pasa al paso 2 si los campos obligatorios están completos
   const goStep2 = () => {
     if (!ckName.trim() || !ckEmail.trim() || !ckAddr.trim()) {
       toast('Completa los datos de envío antes de continuar.');
@@ -38,13 +50,14 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
 
   const backStep1 = () => setStep(1);
 
-  // Igual que formatCard(el): agrupa de 4 en 4, máximo 16 dígitos
+  // Formatea el número de tarjeta en grupos de 4 dígitos (igual que el original)
   const handleCardInput = (e) => {
     const digits = e.target.value.replace(/\D/g, '').substring(0, 16);
     setCkCard(digits.replace(/(\d{4})/g, '$1 ').trim());
   };
 
-  const processPay = () => {
+  // Confirma el pago, muestra el modal y dispara el correo de confirmación
+  const processPay = async () => {
     const cardDigits = ckCard.replace(/\s/g, '');
 
     if (cardDigits.length < 16) {
@@ -56,13 +69,56 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
       return;
     }
 
+    // 1. Mostramos el modal de éxito INMEDIATAMENTE (no esperamos el correo)
     setShowSuccess(true);
+
+    // 2. Generamos un número de pedido único basado en timestamp
+    const numeroPedido = 'VL-' + Date.now();
+    const fechaPedido = new Date().toLocaleString('es-CL');
+
+    // 3. Armamos la lista de productos como texto plano para el template
+    //    (EmailJS no soporta HTML complejo en todos los proveedores de correo)
+    const itemsTexto = cart
+      .map((x) => `• ${x.name} ×${x.qty}  →  ${formatPrice(x.price * x.qty)}`)
+      .join('\n');
+
+    // 4. Armamos el objeto con todas las variables del template de EmailJS
+    //    Los nombres DEBEN coincidir exactamente con {{variable}} en el template
+    const datosPedido = {
+      numero_pedido:  numeroPedido,
+      fecha_pedido:   fechaPedido,
+      nombre_cliente: `${ckName.trim()} ${ckLastname.trim()}`.trim(),
+      email_cliente:  ckEmail.trim(),
+      telefono:       ckPhone.trim() || 'No indicado',
+      direccion:      `${ckAddr}, ${ckCity}${ckZip ? ', CP ' + ckZip : ''}`,
+      metodo_pago:    payMethod,
+      items_texto:    itemsTexto,
+      subtotal:       formatPrice(total),
+      envio:          'Gratis',
+      total:          formatPrice(total),
+      sitio:          'ViceLeteChile',
+    };
+
+    // 5. Enviamos el correo en segundo plano (async sin bloquear)
+    //    enviarCorreoPedido devuelve true si tuvo éxito, false si falló
+    const correoEnviado = await enviarCorreoPedido(datosPedido);
+
+    // 6. Toast discreto según resultado del envío
+    if (correoEnviado) {
+      toast(`📧 Confirmación enviada a ${ckEmail.trim()}`);
+    }
+    // Si falló, no mostramos toast de error (el usuario igual compró exitosamente)
   };
 
+  // Cierra el modal, limpia el carrito y vuelve arriba
   const closeModal = () => {
     setShowSuccess(false);
-    onPaySuccess(); // limpia el carrito (clearCart)
+    onPaySuccess(cart); // Pasamos el carrito actual antes de limpiarlo para descontar el stock
     setStep(1);
+    // Limpiamos los campos del formulario para la próxima compra
+    setCkName(''); setCkLastname(''); setCkEmail(''); setCkPhone('');
+    setCkAddr(''); setCkCity(CITIES[0]); setCkZip('');
+    setCkCard(''); setCkExp(''); setCkCvv(''); setCkCardName('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -75,6 +131,7 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
       </div>
       <div className="checkout-container">
         <div>
+          {/* Indicador de pasos */}
           <div className="checkout-steps">
             <div className={`step${step === 1 ? ' active' : ''}`}>
               <span className="step-num">1</span> Datos
@@ -89,6 +146,7 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
             </div>
           </div>
 
+          {/* Paso 1: Datos personales y dirección */}
           {step === 1 && (
             <div id="checkoutStep1">
               <div className="checkout-form-title">Información Personal</div>
@@ -137,6 +195,7 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
             </div>
           )}
 
+          {/* Paso 2: Método de pago */}
           {step === 2 && (
             <div id="checkoutStep2">
               <div className="checkout-form-title">Método de Pago</div>
@@ -181,6 +240,7 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
                 <button className="btn-outline" style={{ border: '1px solid rgba(255,255,255,.2)' }} onClick={backStep1}>
                   ← Volver
                 </button>
+                {/* processPay es async: el modal aparece antes de que el correo termine */}
                 <button className="btn-primary" style={{ flex: 1, border: 'none' }} onClick={processPay}>
                   Confirmar Compra · <span id="payTotal">{formatPrice(total)}</span>
                 </button>
@@ -189,6 +249,7 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
           )}
         </div>
 
+        {/* Resumen lateral del pedido */}
         <div className="order-summary">
           <div className="order-title">Resumen del Pedido</div>
           <div id="orderItems">
@@ -197,9 +258,7 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
             ) : (
               cart.map((x) => (
                 <div className="order-item" key={x.id}>
-                  <span>
-                    {x.name} ×{x.qty}
-                  </span>
+                  <span>{x.name} ×{x.qty}</span>
                   <span>{formatPrice(x.price * x.qty)}</span>
                 </div>
               ))
@@ -221,12 +280,18 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
         </div>
       </div>
 
+      {/* Modal de compra exitosa */}
       {showSuccess && (
         <div className="modal-overlay open" id="successModal">
           <div className="modal">
             <div className="modal-icon">✓</div>
             <h3>¡Compra Exitosa!</h3>
-            <p>Tu pedido ha sido procesado correctamente. Recibirás un correo de confirmación con el número de seguimiento.</p>
+            <p>
+              Tu pedido ha sido procesado correctamente.{' '}
+              {ckEmail.trim()
+                ? `Recibirás la confirmación en ${ckEmail.trim()}.`
+                : 'Recibirás un correo de confirmación pronto.'}
+            </p>
             <button className="btn-primary" style={{ border: 'none', width: '100%' }} onClick={closeModal}>
               Volver al Inicio
             </button>

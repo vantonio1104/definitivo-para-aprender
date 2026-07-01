@@ -235,23 +235,20 @@ const AccessibilityMenu = () => {
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
         ) : (
-          // Ícono ISA universal de accesibilidad: figura humana con brazos y piernas abiertos
-          <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            {/* Cabeza */}
-            <circle cx="50" cy="17" r="10" fill="#0066cc" />
-            {/* Cuerpo */}
-            <rect x="45" y="29" width="10" height="22" rx="5" fill="#0066cc" />
-            {/* Brazo izquierdo */}
-            <rect x="19" y="31" width="27" height="8" rx="4" fill="#0066cc" />
-            {/* Brazo derecho */}
-            <rect x="54" y="31" width="27" height="8" rx="4" fill="#0066cc" />
-            {/* Pierna izquierda */}
-            <rect x="34" y="50" width="9" height="29" rx="4.5" fill="#0066cc" transform="rotate(-10 38 50)" />
-            {/* Pierna derecha */}
-            <rect x="57" y="50" width="9" height="29" rx="4.5" fill="#0066cc" transform="rotate(10 62 50)" />
-          </svg>
+          // Nueva imagen generada con forma de figura humana para accesibilidad
+          <img
+            src="/imagenes/logo/accessibility_human.png"
+            alt="Accesibilidad"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              borderRadius: '50%'
+            }}
+          />
         )}
       </button>
+
 
       {/* Panel de accesibilidad */}
       <div

@@ -23,6 +23,28 @@ function loadUsuarios() {
   }
 }
 
+// Garantiza que siempre exista el usuario admin de prueba.
+// Si ya existe (mismos email) no lo duplica.
+function ensureAdminUser(usuarios) {
+  const ADMIN_EMAIL = 'admin@viceletchile.cl';
+  if (usuarios.some((u) => u.email === ADMIN_EMAIL)) return usuarios;
+  const admin = {
+    id: 1,
+    nombre: 'Admin ViceLete',
+    email: ADMIN_EMAIL,
+    password: 'admin123',
+    fechaRegistro: new Date().toISOString(),
+    rol: 'admin',
+  };
+  const next = [admin, ...usuarios];
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch (e) {
+    console.warn('No se pudo guardar admin:', e);
+  }
+  return next;
+}
+
 function loadSesion() {
   try {
     const raw = localStorage.getItem(SESSION_KEY);
@@ -37,7 +59,7 @@ function loadSesion() {
 }
 
 export function useAuth() {
-  const [usuarios, setUsuarios] = useState(loadUsuarios);
+  const [usuarios, setUsuarios] = useState(() => ensureAdminUser(loadUsuarios()));
   const [sesion, setSesion] = useState(loadSesion);
 
   // Persistir cada vez que cambian usuarios o sesión (equivalente a saveState())

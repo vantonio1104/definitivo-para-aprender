@@ -4,6 +4,34 @@
 
 ---
 
+## ⚠️ CREDENCIALES DE ACCESO — REFERENCIA RÁPIDA
+
+> [!IMPORTANT]
+> Guarda estas credenciales. Son inyectadas automáticamente en `localStorage` al iniciar la app.
+
+### Administrador (panel CRUD)
+| Campo | Valor |
+|-------|-------|
+| **Email** | `admin@viceletchile.cl` |
+| **Contraseña** | `admin123` |
+| **Rol** | `admin` |
+| **Cómo acceder** | Iniciar sesión → aparece enlace **⚙ Admin** en el header → sección `#admin` al pie de la página |
+
+### Usuario de prueba (cliente normal)
+| Campo | Valor |
+|-------|-------|
+| **Registro** | Cualquier email/contraseña via sección `#perfil` |
+| **Rol** | `user` (sin acceso al panel admin) |
+
+### Claves de `localStorage`
+| Clave | Contenido |
+|-------|-----------|
+| `Lete_usuarios_v1` | Array de usuarios registrados (incluye admin) |
+| `Lete_sesion_v1` | Sesión activa actual |
+| `Lete_productos_v1` | Catálogo de productos (editable via panel admin) |
+
+---
+
 ## 1. Migración de sitio estático (HTML/CSS/JS) a React + Vite
 
 Fuente: `MIGRACION.md`. Estado declarado: **migración funcional completa**, build verificado (`vite build` → 37 módulos, sin errores).
@@ -163,7 +191,54 @@ Se agregó además una sección nueva **"GARANTÍAS DE CONTENIMIENTO"** con `box
 
 ---
 
-## 4. Otros documentos de la carpeta (sin cambios de código adicionales)
+## 4. CRUD de Productos + Panel de Administrador
+
+Fecha: junio 2026. Build verificado: `vite build` → 41 módulos, sin errores.
+
+### Objetivo
+Migrar el catálogo de productos de un array estático (`data/products.js`) a un estado gestionado con persistencia en `localStorage`, y agregar un panel de administración protegido por rol para crear, editar y eliminar productos en tiempo real.
+
+### Archivos creados
+| Archivo | Descripción |
+|---------|-------------|
+| `src/hooks/useProducts.js` | Hook central de productos: CRUD + persistencia en `Lete_productos_v1`. Carga los datos de `products.js` solo si el storage está vacío (primera visita). Expone `{ products, addProduct, updateProduct, deleteProduct }`. |
+| `src/components/AdminPanel.jsx` | Panel completo de administración: tabla de productos con thumbnails, búsqueda en vivo, botones editar/eliminar, formulario modal de creación/edición con validación, y diálogo de confirmación antes de eliminar. |
+
+### Archivos modificados
+| Archivo | Cambio |
+|---------|--------|
+| `src/hooks/useProductFilters.js` | Ya no importa el array estático `PRODUCTS`. Ahora recibe `products` como argumento: `useProductFilters(products)`. El `useMemo` incluye `products` en sus dependencias para reaccionar a cambios del CRUD. |
+| `src/hooks/useAuth.js` | Agrega función `ensureAdminUser()` que inyecta el usuario `admin@viceletchile.cl / admin123 / rol:admin` en `localStorage` si no existe. Se llama en el inicializador del `useState` de usuarios. |
+| `src/components/Header.jsx` | Recibe prop `sesion`. Muestra enlace **⚙ Admin** (dorado) en el nav solo cuando `sesion.activo && sesion.usuario.rol === 'admin'`. |
+| `src/App.jsx` | Instancia `useProducts()` y pasa `products` a `useProductFilters(products)`. Pasa `sesion` al `<Header>`. Renderiza `<AdminPanel>` condicionalmente: `{isAdmin && <AdminPanel ... />}`. |
+| `src/styles/estilo_pag_rop.css` | ~100 líneas nuevas al final para estilos del panel admin: `.admin-section`, tabla (`.admin-table`, `.admin-thumb`, `.admin-cat-pill`, `.admin-badge-bool`), formulario modal (`.admin-form-overlay`, `.admin-form-modal`, `.admin-fg`), botones de acción, diálogo de confirmación y responsive mobile. |
+
+### Flujo de datos
+```
+useProducts (localStorage: Lete_productos_v1)
+    ↓ products[]
+    ├── useProductFilters(products) → filtered[] → ProductGrid  [tienda]
+    └── AdminPanel (addProduct / updateProduct / deleteProduct)  [admin]
+```
+
+### Funcionalidades del AdminPanel
+- **Tabla**: lista todos los productos con imagen, nombre, categoría (pill), precio, badge, estado "Nuevo".
+- **Búsqueda**: campo de texto que filtra la tabla en tiempo real por nombre.
+- **Crear**: botón "+ Nuevo Producto" → abre modal con formulario vacío.
+- **Editar**: botón "✏️ Editar" por fila → rellena el modal con los datos del producto.
+- **Formulario**: campos nombre (requerido), categoría (select), badge (select), precio (requerido, numérico), URL de imagen (con preview inline), checkbox "Nuevo ingreso". Validación antes de enviar.
+- **Eliminar**: botón "🗑 Eliminar" → abre diálogo de confirmación antes de borrar.
+- **Toast**: notificación en cada operación exitosa (creado / actualizado / eliminado).
+- **Diseño**: consistente con el sistema visual del sitio (navy `#002233`, cyan `#00bcd4`, gold `#c9a84c`).
+
+### Notas de diseño / decisiones
+- No se usó React Router. El panel admin es una sección `#admin` al pie de la página `<main>`, solo renderizada para admin. Esto preserva la arquitectura de scroll/single-page existente.
+- El enlace "⚙ Admin" del header aparece y desaparece según el estado de sesión, sin recarga de página.
+- Los productos del carrito siguen leyendo los mismos objetos (por `id`); si se edita un precio, el carrito mostrará el precio nuevo la próxima vez que se abra.
+
+---
+
+## 5. Otros documentos de la carpeta (sin cambios de código adicionales)
 
 Estos `.md` son guías de referencia/uso y no describen cambios de código distintos a los ya listados arriba — se omiten del detalle técnico para no duplicar contenido:
 - `ACCESSIBILITY_README.md`, `ACCESSIBILITY_GUIDE.md`, `ACCESSIBILITY_CHEATSHEET.md`, `ACCESSIBILITY_TESTING.md`, `ACCESSIBILITY_INDEX.md`, `ACCESSIBILITY_ADVANCED_EXAMPLES.md` — documentación de uso, ejemplos de extensión (hooks de analytics, perfiles rápidos, validador de contraste WCAG) y guía de pruebas manuales del sistema de accesibilidad.
@@ -173,11 +248,11 @@ Estos `.md` son guías de referencia/uso y no describen cambios de código disti
 
 ---
 
-## 5. Revisión adicional del código fuente (más allá de lo documentado en los .md)
+## 6. Revisión adicional del código fuente (más allá de lo documentado en los .md)
 
 Verificación directa de `src/` para detectar código no cubierto explícitamente por la documentación:
 
-- **`src/App.jsx`** actúa como punto de unión central: reemplaza `index.html` + `main.js` originales. El estado global (carrito, favoritos, auth, filtros, toasts) vive en hooks y se pasa por props, replicando lo que antes eran variables globales (`cart`, `favs`, `sesion`, `filtered`) accesibles desde cualquier función de `main.js`.
+- **`src/App.jsx`** actúa como punto de unión central: reemplaza `index.html` + `main.js` originales. El estado global (carrito, favoritos, auth, filtros, productos, toasts) vive en hooks y se pasa por props, replicando lo que antes eran variables globales (`cart`, `favs`, `sesion`, `filtered`) accesibles desde cualquier función de `main.js`.
 - **`CartDrawer.jsx`** no aparece mencionado explícitamente en la lista de componentes nuevos de `MIGRACION.md`, pero su propio comentario de cabecera confirma que reemplaza el bloque `<div class="cart-drawer">` y la función `updateCart()` con `innerHTML` del sitio original — coherente con el resto de la migración, solo faltó listarlo en la documentación.
 - **Tamaño actual de los archivos clave de accesibilidad** (confirmado por conteo de líneas, no documentado numéricamente en ningún `.md`):
   - `AccessibilityMenu.jsx`: 463 líneas
@@ -193,3 +268,4 @@ Verificación directa de `src/` para detectar código no cubierto explícitament
 1. **Migración** de sitio estático a React + Vite con arquitectura de componentes/hooks, preservando comportamiento y datos de `localStorage` existentes.
 2. **Sistema de accesibilidad** nuevo (botón flotante + panel con 8 categorías de ajustes, WCAG 2.1 AA, persistente en `localStorage`).
 3. **Fixes quirúrgicos** (2 archivos, ~50 líneas) para que el panel de accesibilidad funcione correctamente con texto ampliado hasta 250%+, sin overlaps ni scroll horizontal.
+4. **CRUD de productos + panel admin** (2 archivos nuevos, 4 modificados) con gestión dinámica en `localStorage`, formulario modal completo, roles de usuario (`admin`/`user`) y acceso protegido por sesión.
