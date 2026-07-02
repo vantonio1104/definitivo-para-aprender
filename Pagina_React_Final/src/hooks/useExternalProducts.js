@@ -9,7 +9,7 @@ const MOCK_FALLBACK = [
     price: 109.95,
     description: 'Your perfect pack for everyday use and walks in the forest. Stash your laptop (up to 15 inches) in the padded sleeve.',
     category: "men's clothing",
-    image: 'https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg',
+    image: '/imagenes/chaquetas/chaqueta1.png',
     rating: { rate: 3.9, count: 120 }
   },
   {
@@ -18,7 +18,7 @@ const MOCK_FALLBACK = [
     price: 22.30,
     description: 'Slim-fit raglan 3/4 sleeve t-shirt, light & soft cotton material for a comfortable fit.',
     category: "men's clothing",
-    image: 'https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_.jpg',
+    image: '/imagenes/trajes/traje1.jpg',
     rating: { rate: 4.1, count: 259 }
   },
   {
@@ -27,7 +27,7 @@ const MOCK_FALLBACK = [
     price: 695.00,
     description: 'From our Legends Collection, the Naga was inspired by the mythical water dragon that protects the ocean\'s pearl.',
     category: 'jewelery',
-    image: 'https://fakestoreapi.com/img/71YAIFU48IL._AC_UL640_.jpg',
+    image: '/imagenes/zapatillas/zapa3.jpg',
     rating: { rate: 4.6, count: 400 }
   },
   {
@@ -36,7 +36,7 @@ const MOCK_FALLBACK = [
     price: 64.00,
     description: 'USB 3.0 and USB 2.0 Compatibility Fast data transfers Improve PC Performance High Capacity.',
     category: 'electronics',
-    image: 'https://fakestoreapi.com/img/61IBJVJIGmL._AC_SL1000_.jpg',
+    image: '/imagenes/zapatillas/zapa4.jpg',
     rating: { rate: 3.3, count: 203 }
   }
 ];
