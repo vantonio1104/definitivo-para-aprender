@@ -5,7 +5,7 @@
 
 import { formatPrice } from '../data/products';
 
-export default function CartDrawer({ cart, isOpen, total, onClose, onChangeQty, onRemove }) {
+export default function CartDrawer({ cart, isOpen, total, onClose, onChangeQty, onRemove, onNavigate }) {
   return (
     <>
       <div className={`cart-overlay${isOpen ? ' open' : ''}`} id="cartOverlay" onClick={onClose} />
@@ -57,9 +57,9 @@ export default function CartDrawer({ cart, isOpen, total, onClose, onChangeQty, 
             <span>Total</span>
             <span id="cartTotalEl">{formatPrice(total)}</span>
           </div>
-          <a href="#checkout" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={onClose}>
+          <button className="btn-primary" style={{ width: '100%', border: 'none' }} onClick={() => { onClose(); onNavigate?.('checkout'); }}>
             Ir al Checkout →
-          </a>
+          </button>
         </div>
       </div>
     </>

@@ -79,7 +79,14 @@ export default function ProductDetailMenu({ product, onClose, onAddToCart }) {
             <p className="pdm-brand">por <strong>{product.marca}</strong></p>
 
             {/* Precio */}
-            <p className="pdm-price">{formatPrice(product.price)}</p>
+            <p className="pdm-price">
+              {formatPrice(product.price)}
+              {product.isExternal && (
+                <span style={{ fontSize: '0.6em', color: 'var(--gray)', marginLeft: '8px', display: 'inline-block', verticalAlign: 'middle' }}>
+                  (Aprox. ${product.originalPriceUSD?.toFixed(2)} USD)
+                </span>
+              )}
+            </p>
 
             {/* Badge de producto nuevo */}
             {product.isNew && <span className="pdm-badge-new">Nuevo ingreso</span>}
@@ -179,6 +186,31 @@ export default function ProductDetailMenu({ product, onClose, onAddToCart }) {
           <button className="pdm-btn-close-txt" onClick={onClose}>
             Cerrar
           </button>
+          {product.isExternal && (
+            <a
+              href={`https://www.google.com/search?q=${encodeURIComponent(product.name)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pdm-btn-external-buy"
+              style={{
+                textDecoration: 'none',
+                background: 'var(--gold)',
+                color: 'var(--navy)',
+                fontWeight: 'bold',
+                padding: '10px 16px',
+                borderRadius: '3px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.9em',
+                transition: 'background 0.3s',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              🌐 Comprar Original
+            </a>
+          )}
           <button
             className={`pdm-btn-add ${sinStock ? 'pdm-btn-add--disabled' : ''}`}
             onClick={() => {

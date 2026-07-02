@@ -363,6 +363,8 @@
   cursor: pointer;
   box-shadow: 0 2px 4px var(--accessibility-shadow);
   transition: var(--accessibility-transition);
+  /* Centrar verticalmente: -(thumbHeight - trackHeight) / 2 */
+  margin-top: -6px;
 }
 
 .accessibility-slider::-webkit-slider-thumb:hover {
@@ -620,6 +622,36 @@
 /* Escala de grises */
 .accessibility-grayscale {
   filter: grayscale(1) !important;
+}
+
+/* ============================================
+   OVERRIDES GLOBALES DE ACCESIBILIDAD
+   Espaciado de letras y altura de línea
+   Se activan solo cuando el usuario cambia los sliders
+   ============================================ */
+
+/* Espaciado de letras global — aplica a TODOS los elementos de texto */
+.accessibility-custom-letter-spacing,
+.accessibility-custom-letter-spacing * {
+  letter-spacing: var(--a11y-letter-spacing) !important;
+}
+/* Excluir el panel de accesibilidad del override de letter-spacing */
+.accessibility-custom-letter-spacing .accessibility-panel,
+.accessibility-custom-letter-spacing .accessibility-panel *,
+.accessibility-custom-letter-spacing .accessibility-button {
+  letter-spacing: normal !important;
+}
+
+/* Altura de línea global — aplica a TODOS los elementos de texto */
+.accessibility-custom-line-height,
+.accessibility-custom-line-height * {
+  line-height: var(--a11y-line-height) !important;
+}
+/* Excluir el panel de accesibilidad del override de line-height */
+.accessibility-custom-line-height .accessibility-panel,
+.accessibility-custom-line-height .accessibility-panel *,
+.accessibility-custom-line-height .accessibility-button {
+  line-height: normal !important;
 }
 
 /* ============================================

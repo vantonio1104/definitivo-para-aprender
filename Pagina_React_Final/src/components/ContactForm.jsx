@@ -51,7 +51,7 @@ export default function ContactForm() {
             name="contactName"
             placeholder="Tu nombre"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => setName(e.target.value.replace(/\d/g, ''))}
           />
           <div className="auth-msg field-error" id="contactNameError">{errors.nombre}</div>
         </div>

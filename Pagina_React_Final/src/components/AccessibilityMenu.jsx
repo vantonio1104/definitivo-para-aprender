@@ -70,11 +70,21 @@ const AccessibilityMenu = () => {
         root.classList.remove('accessibility-high-contrast', 'accessibility-inverted', 'accessibility-grayscale');
     }
 
-    // Aplicar espaciado de letras
-    root.style.letterSpacing = letterSpacing > 0 ? `${letterSpacing}px` : 'normal';
+    // Aplicar espaciado de letras mediante variable CSS + clase
+    root.style.setProperty('--a11y-letter-spacing', `${letterSpacing}px`);
+    if (letterSpacing > 0) {
+      root.classList.add('accessibility-custom-letter-spacing');
+    } else {
+      root.classList.remove('accessibility-custom-letter-spacing');
+    }
 
-    // Aplicar altura de línea
-    root.style.lineHeight = lineHeight;
+    // Aplicar altura de línea mediante variable CSS + clase
+    root.style.setProperty('--a11y-line-height', String(lineHeight));
+    if (lineHeight !== 1.5) {
+      root.classList.add('accessibility-custom-line-height');
+    } else {
+      root.classList.remove('accessibility-custom-line-height');
+    }
 
     // Aplicar fuente amigable para dislexia
     if (dyslexiaFont) {
@@ -169,6 +179,11 @@ const AccessibilityMenu = () => {
     setLetterSpacing(0);
     setLineHeight(1.5);
     setDyslexiaFont(false);
+    // Limpiar clases y propiedades CSS de accesibilidad
+    const root = document.documentElement;
+    root.classList.remove('accessibility-custom-letter-spacing', 'accessibility-custom-line-height');
+    root.style.removeProperty('--a11y-letter-spacing');
+    root.style.removeProperty('--a11y-line-height');
   };
 
   /**
@@ -185,6 +200,11 @@ const AccessibilityMenu = () => {
     setLargeCursor(false);
     setStopAnimations(false);
     localStorage.removeItem('accessibilitySettings');
+    // Limpiar clases y propiedades CSS de accesibilidad
+    const root = document.documentElement;
+    root.classList.remove('accessibility-custom-letter-spacing', 'accessibility-custom-line-height');
+    root.style.removeProperty('--a11y-letter-spacing');
+    root.style.removeProperty('--a11y-line-height');
   };
 
   /**

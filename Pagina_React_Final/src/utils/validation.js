@@ -22,6 +22,15 @@ export function passwordsMatch(p1, p2) {
   return String(p1 || '') === String(p2 || '');
 }
 
+export function validateChileanPhone(phone) {
+  // Remove spaces, dashes and parentheses
+  const clean = String(phone || '').replace(/[\s\-()]/g, '');
+  
+  // Chilean format: Optional '+56' or '56' followed by exactly 9 digits
+  const phoneRegex = /^(\+?56)?\d{9}$/;
+  return phoneRegex.test(clean);
+}
+
 /**
  * Validación genérica de formularios (login, registro, contacto).
  * Devuelve { valid, errors } donde errors es un objeto { campo: mensaje },
@@ -31,8 +40,13 @@ export function validarDatos(formData) {
   const errors = {};
   const texto = (value) => String(value || '').trim();
 
-  if ('nombre' in formData && !texto(formData.nombre)) {
-    errors.nombre = 'Completa tu nombre.';
+  if ('nombre' in formData) {
+    const nombreVal = texto(formData.nombre);
+    if (!nombreVal) {
+      errors.nombre = 'Completa tu nombre.';
+    } else if (/\d/.test(nombreVal)) {
+      errors.nombre = 'El nombre no puede contener números.';
+    }
   }
 
   if ('email' in formData && !validateEmail(formData.email)) {
@@ -56,3 +70,4 @@ export function validarDatos(formData) {
     errors,
   };
 }
+

@@ -21,6 +21,7 @@ import ProductDetailMenu from './components/ProductDetailMenu';
 import Toasts from './components/Toasts';
 import AccessibilityMenu from './components/AccessibilityMenu';
 import AdminPanel from './components/AdminPanel';
+import ExternalTrends from './components/ExternalTrends';
 
 import { useCart } from './hooks/useCart';
 import { useFavorites } from './hooks/useFavorites';
@@ -28,6 +29,7 @@ import { useProductFilters } from './hooks/useProductFilters';
 import { useAuth } from './hooks/useAuth';
 import { useToasts } from './hooks/useToasts';
 import { useProducts } from './hooks/useProducts';
+import { useExternalProducts } from './hooks/useExternalProducts';
 
 function App() {
   const { toasts, toast } = useToasts();
@@ -44,8 +46,14 @@ function App() {
   // Fuente de verdad de productos (localStorage, con fallback a products.js)
   const { products, addProduct, updateProduct, deleteProduct, discountStock } = useProducts();
 
+  // Traer productos tendencias externas
+  const externalProductsHook = useExternalProducts();
+
+  // Lista combinada de productos para el carrito y los detalles
+  const combinedProductsList = [...products, ...externalProductsHook.data];
+
   const { cart, isOpen, count, total, addToCart, removeFromCart, changeQty, clearCart, toggleCart, closeCart } =
-    useCart(products, toast);
+    useCart(combinedProductsList, toast);
 
   const { favs, toggleFav } = useFavorites(() => toast('Agregado a favoritos ♥'));
 
@@ -105,6 +113,13 @@ function App() {
               onAddToCart={addToCart}
               onViewDetails={setSelectedProductDetails}
             />
+            <ExternalTrends
+              onAddToCart={addToCart}
+              onViewDetails={setSelectedProductDetails}
+              favs={favs}
+              onToggleFav={toggleFav}
+              externalProductsData={externalProductsHook}
+            />
           </>
         )}
 
@@ -146,12 +161,13 @@ function App() {
         onClose={closeCart}
         onChangeQty={changeQty}
         onRemove={removeFromCart}
+        onNavigate={setCurrentPage}
       />
 
       {/* Cajón lateral de favoritos */}
       <FavoritesDrawer
         favs={favs}
-        products={products}
+        products={combinedProductsList}
         isOpen={isFavsOpen}
         onClose={() => setIsFavsOpen(false)}
         onRemove={toggleFav}

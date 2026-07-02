@@ -1,0 +1,239 @@
+================================================================================
+                        IA_Consultas.txt
+          Registro de Consultas a Inteligencia Artificial
+          Proyecto: ViceLete Chile — Pagina_React_Final
+          Fecha: Julio 2026
+================================================================================
+
+Este archivo documenta los prompts y consultas realizadas a herramientas de
+Inteligencia Artificial durante el desarrollo del proyecto, específicamente
+para establecer principios de seguridad en localStorage, manejo de errores
+y validaciones en las peticiones a APIs externas.
+
+================================================================================
+CONSULTA 1 — Seguridad en localStorage: Prevención de XSS
+================================================================================
+
+PROMPT:
+"Necesito implementar operaciones CRUD usando localStorage en mi aplicación
+React. ¿Cómo puedo prevenir inyección de código (XSS) al guardar datos
+ingresados por el usuario en localStorage? Dame una función de sanitización
+que limpie los inputs antes de almacenarlos."
+
+RESPUESTA DE LA IA (resumen aplicado):
+- Se creó la función sanitizeInput() en src/utils/validation.js que:
+  * Convierte el valor a String para evitar tipos inesperados
+  * Aplica .trim() para eliminar espacios innecesarios
+  * Reemplaza los caracteres < y > por sus entidades HTML (&lt; y &gt;)
+    para prevenir que se inyecte código HTML/JavaScript malicioso
+- La función resultante fue:
+
+    export function sanitizeInput(value) {
+      return String(value || '')
+        .trim()
+        .replace(/[<>]/g, (char) => (char === '<' ? '&lt;' : '&gt;'));
+    }
+
+DÓNDE SE APLICÓ:
+- src/components/AuthSection.jsx → login (email) y registro (nombre, email)
+- src/components/ContactForm.jsx → nombre, email y mensaje del formulario
+- src/components/AdminPanel.jsx → name, img, badge, marca, materiales
+  antes de llamar a onAdd/onUpdate que persisten en localStorage
+
+================================================================================
+CONSULTA 2 — Validación de datos antes de guardar en localStorage
+================================================================================
+
+PROMPT:
+"En mi panel de administración AdminPanel.jsx tengo una función validate()
+que solo verifica campos vacíos y números. ¿Cómo puedo mejorarla para que
+también sanitice los campos de texto contra inyección de código antes de
+guardar los datos en localStorage? Quiero usar el mismo patrón que ya usan
+AuthSection.jsx y ContactForm.jsx con sanitizeInput()."
+
+RESPUESTA DE LA IA (resumen aplicado):
+- Se mantuvo la función validate() existente para validaciones de formato
+  (campos vacíos, precio > 0, stock >= 0)
+- Se agregó una capa de sanitización en handleSubmit DESPUÉS de validar
+  pero ANTES de enviar los datos a onAdd/onUpdate:
+
+    const data = {
+      ...form,
+      name: sanitizeInput(form.name),
+      img: sanitizeInput(form.img),
+      badge: sanitizeInput(form.badge),
+      marca: sanitizeInput(form.marca),
+      materiales: sanitizeInput(form.materiales),
+      price: Number(form.price),
+      stock: Number(form.stock) || 0
+    };
+
+- Los campos numéricos (price, stock) no necesitan sanitización porque
+  pasan por Number() que los convierte a tipo numérico seguro
+
+DÓNDE SE APLICÓ:
+- src/components/AdminPanel.jsx → función handleSubmit (líneas 81-106)
+
+================================================================================
+CONSULTA 3 — Persistencia segura con localStorage y useEffect
+================================================================================
+
+PROMPT:
+"Actualmente mi hook useProducts.js carga los datos iniciales con
+useState(loadProducts) (inicialización perezosa). Mi profesor me pide que
+la carga inicial ocurra dentro de un useEffect, igual que en useAuth.js.
+¿Cómo refactorizo esto manteniendo la sincronización con localStorage?"
+
+RESPUESTA DE LA IA (resumen aplicado):
+- Se cambió useState(loadProducts) por useState([]) para empezar con
+  un array vacío
+- Se agregó un useEffect con dependencias vacías [] que se ejecuta
+  al montar el componente y llama a loadProducts():
+
+    const [products, setProducts] = useState([]);
+
+    useEffect(() => {
+      setProducts(loadProducts());
+    }, []);
+
+- La función loadProducts() lee de localStorage con try/catch para
+  manejar errores de parsing JSON de forma segura
+- Si localStorage está vacío o corrupto, se usa el catálogo inicial
+  como fallback (INITIAL_PRODUCTS)
+
+DÓNDE SE APLICÓ:
+- src/hooks/useProducts.js → líneas 34-40
+
+================================================================================
+CONSULTA 4 — Fetch asíncrono con manejo de errores (try/catch)
+================================================================================
+
+PROMPT:
+"Necesito crear un hook en React que consuma la API pública FakeStoreAPI
+(https://fakestoreapi.com/products) usando fetch. ¿Cómo implemento
+correctamente el manejo de errores con try/catch? Necesito:
+1. Verificar response.ok antes de parsear
+2. Manejar errores de red y HTTP
+3. Mostrar mensajes amigables al usuario (no errores técnicos)
+4. Evitar memory leaks si el componente se desmonta durante el fetch"
+
+RESPUESTA DE LA IA (resumen aplicado):
+- Se creó el hook useExternalProducts() con tres estados: loading, error, data
+- Se implementó el patrón async/await dentro de useEffect con una variable
+  'cancelled' para el cleanup:
+
+    useEffect(() => {
+      let cancelled = false;
+
+      async function fetchProducts() {
+        setLoading(true);
+        setError(null);
+
+        try {
+          const response = await fetch(API_URL);
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const json = await response.json();
+
+          if (!cancelled) {
+            setData(Array.isArray(json) ? json : []);
+          }
+        } catch (err) {
+          if (!cancelled) {
+            setError('No pudimos cargar las tendencias en este momento. Intenta más tarde.');
+            console.warn('Error al cargar productos externos:', err);
+          }
+        } finally {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        }
+      }
+
+      fetchProducts();
+      return () => { cancelled = true; };
+    }, []);
+
+PRINCIPIOS APLICADOS:
+- response.ok verifica que el status HTTP sea 200-299
+- try/catch captura errores de red (sin conexión), HTTP (4xx, 5xx) y
+  errores de parsing JSON
+- El mensaje de error para el usuario es amigable y en español
+- El error técnico se envía a console.warn para debugging
+- El flag 'cancelled' previene el error de React "Can't perform a state
+  update on an unmounted component"
+- finally siempre ejecuta setLoading(false) para evitar spinners infinitos
+
+DÓNDE SE APLICÓ:
+- src/hooks/useExternalProducts.js (archivo completo)
+
+================================================================================
+CONSULTA 5 — Estados visuales de carga y error en la interfaz
+================================================================================
+
+PROMPT:
+"Tengo un hook que devuelve loading, error y data. ¿Cómo muestro estos
+estados en la interfaz de forma visual y amigable? Necesito un skeleton
+loader mientras carga y un mensaje de error visual cuando falle. Todo debe
+mantener el mismo estilo CSS que mi ProductGrid.jsx existente."
+
+RESPUESTA DE LA IA (resumen aplicado):
+- Se creó el componente ExternalTrends.jsx que consume useExternalProducts()
+- Se implementaron 4 estados visuales:
+
+  1. LOADING: Skeleton con 4 tarjetas placeholder usando la misma clase
+     'prod-card' del ProductGrid, con animación CSS pulse
+  2. ERROR: Contenedor centrado con icono ⚠️ y mensaje amigable en español
+  3. SIN DATOS: Mensaje "No hay tendencias disponibles"
+  4. ÉXITO: Grid de tarjetas con imagen, título, precio y rating
+
+- Se reutilizaron las clases CSS existentes (prod-grid, prod-card,
+  prod-img-wrap, prod-info, prod-name, prod-price, prod-badge) para
+  mantener coherencia visual con el catálogo principal
+
+DÓNDE SE APLICÓ:
+- src/components/ExternalTrends.jsx (archivo completo)
+- src/styles/estilo_pag_rop.css → sección "EXTERNAL TRENDS — Skeleton
+  & Error States" con @keyframes external-skeleton-pulse
+
+================================================================================
+CONSULTA 6 — Organización en componentes funcionales reutilizables
+================================================================================
+
+PROMPT:
+"¿Cómo organizo mi código React para que siga buenas prácticas de
+componentes funcionales? Necesito que la lógica de datos esté separada
+de la presentación, use useState para el estado local, y comunique datos
+entre componentes usando props sin manipular el DOM directamente."
+
+RESPUESTA DE LA IA (resumen aplicado):
+- Separación de responsabilidades:
+  * HOOKS (lógica): useProducts, useExternalProducts, useAuth, useCart
+    → Manejan estado y efectos secundarios
+  * COMPONENTES (presentación): ProductGrid, ExternalTrends, AdminPanel
+    → Reciben datos por props y renderizan UI
+  * UTILS (funciones puras): validation.js → sanitizeInput, validateEmail
+
+- Patrones aplicados:
+  * Custom hooks devuelven objetos con estado + funciones
+  * Props drilling desde App.jsx hacia componentes hijos
+  * Callbacks como props para comunicación hijo → padre
+  * useState para estado local, useCallback para memoizar funciones
+  * Ningún componente usa document.querySelector ni getElementById
+
+- Estructura de carpetas:
+  src/
+  ├── hooks/        → Lógica reutilizable (useProducts, useExternalProducts, etc.)
+  ├── components/   → Componentes de presentación (ProductGrid, AdminPanel, etc.)
+  ├── utils/        → Funciones puras (validation.js)
+  └── data/         → Datos estáticos (products.js, categories.js)
+
+DÓNDE SE APLICÓ:
+- Arquitectura general del proyecto completo
+
+================================================================================
+                        FIN DEL DOCUMENTO
+================================================================================

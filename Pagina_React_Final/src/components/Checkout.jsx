@@ -12,7 +12,7 @@
 import { useState } from 'react';
 import { formatPrice } from '../data/products';
 import { useEmailJS } from '../hooks/useEmailJS';
-import { validateEmail } from '../utils/validation';
+import { validateEmail, validateChileanPhone } from '../utils/validation';
 import { REGIONES, UMBRAL_ENVIO_GRATIS } from '../data/shipping';
 
 const PAY_METHODS = ['Tarjeta Crédito', 'Tarjeta Débito', 'WebPay', 'Transferencia'];
@@ -20,6 +20,7 @@ const PAY_METHODS = ['Tarjeta Crédito', 'Tarjeta Débito', 'WebPay', 'Transfere
 // Función utilitaria para construir la URL pública de la imagen
 const getPublicImageUrl = (ruta) => {
   if (!ruta) return '';
+  if (ruta.startsWith('http')) return ruta;
   return `https://raw.githubusercontent.com/vantonio1104/definitivo-para-aprender/main/Pagina_React_Final/public${ruta}`;
 };
 
@@ -58,8 +59,20 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
       toast('Completa los datos de envío antes de continuar.');
       return;
     }
+    if (/\d/.test(ckName)) {
+      toast('El nombre no puede contener números.');
+      return;
+    }
+    if (/\d/.test(ckLastname)) {
+      toast('El apellido no puede contener números.');
+      return;
+    }
     if (!validateEmail(ckEmail)) {
       toast('Ingresa un correo electrónico válido.');
+      return;
+    }
+    if (!validateChileanPhone(ckPhone)) {
+      toast('Ingresa un teléfono chileno válido (9 dígitos, opcionalmente con prefijo +56).');
       return;
     }
     setStep(2);
@@ -79,6 +92,18 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
 
     if (cardDigits.length < 16) {
       toast('Ingresa un número de tarjeta válido.');
+      return;
+    }
+    if (/[a-zA-Z]/.test(cardDigits)) {
+      toast('El número de tarjeta no puede contener letras.');
+      return;
+    }
+    if (/[a-zA-Z]/.test(ckCvv)) {
+      toast('El CVV no puede contener letras.');
+      return;
+    }
+    if (/\d/.test(ckCardName)) {
+      toast('El nombre en la tarjeta no puede contener números.');
       return;
     }
     if (!cart.length) {
@@ -171,11 +196,11 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
               <div className="form-row">
                 <div className="checkout-group">
                   <label>Nombre</label>
-                  <input type="text" placeholder="María" id="ckName" value={ckName} onChange={(e) => setCkName(e.target.value)} />
+                  <input type="text" placeholder="María" id="ckName" value={ckName} onChange={(e) => setCkName(e.target.value.replace(/\d/g, ''))} />
                 </div>
                 <div className="checkout-group">
                   <label>Apellido</label>
-                  <input type="text" placeholder="González" id="ckLastname" value={ckLastname} onChange={(e) => setCkLastname(e.target.value)} />
+                  <input type="text" placeholder="González" id="ckLastname" value={ckLastname} onChange={(e) => setCkLastname(e.target.value.replace(/\d/g, ''))} />
                 </div>
               </div>
               <div className="checkout-group">
@@ -184,7 +209,7 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
               </div>
               <div className="checkout-group">
                 <label>Teléfono</label>
-                <input type="tel" placeholder="+56 9 1234 5678" id="ckPhone" value={ckPhone} onChange={(e) => setCkPhone(e.target.value)} />
+                <input type="tel" placeholder="+56 9 1234 5678" id="ckPhone" value={ckPhone} onChange={(e) => setCkPhone(e.target.value.replace(/[^\d+ ]/g, ''))} />
               </div>
               <div className="checkout-form-title" style={{ marginTop: 24 }}>
                 Dirección de Envío
@@ -209,7 +234,7 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
               </div>
               <div className="checkout-group">
                 <label>Código Postal</label>
-                <input type="text" placeholder="7550000" id="ckZip" value={ckZip} onChange={(e) => setCkZip(e.target.value)} />
+                <input type="text" placeholder="7550000" id="ckZip" value={ckZip} onChange={(e) => setCkZip(e.target.value.replace(/\D/g, ''))} />
               </div>
               <button className="btn-primary" style={{ width: '100%', border: 'none', marginTop: 8 }} onClick={goStep2}>
                 Continuar al Pago →
@@ -246,16 +271,16 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
               <div className="form-row">
                 <div className="checkout-group">
                   <label>Vencimiento</label>
-                  <input type="text" placeholder="MM / AA" id="ckExp" maxLength={7} value={ckExp} onChange={(e) => setCkExp(e.target.value)} />
+                  <input type="text" placeholder="MM / AA" id="ckExp" maxLength={7} value={ckExp} onChange={(e) => setCkExp(e.target.value.replace(/[^\d/]/g, ''))} />
                 </div>
                 <div className="checkout-group">
                   <label>CVV</label>
-                  <input type="text" placeholder="•••" id="ckCvv" maxLength={3} value={ckCvv} onChange={(e) => setCkCvv(e.target.value)} />
+                  <input type="text" placeholder="•••" id="ckCvv" maxLength={3} value={ckCvv} onChange={(e) => setCkCvv(e.target.value.replace(/\D/g, ''))} />
                 </div>
               </div>
               <div className="checkout-group">
                 <label>Nombre en la Tarjeta</label>
-                <input type="text" placeholder="MARIA GONZALEZ" id="ckCardName" value={ckCardName} onChange={(e) => setCkCardName(e.target.value)} />
+                <input type="text" placeholder="MARIA GONZALEZ" id="ckCardName" value={ckCardName} onChange={(e) => setCkCardName(e.target.value.replace(/\d/g, ''))} />
               </div>
               <div className="secure-badge">🔒 Pago 100% seguro · Encriptación SSL 256-bit · PCI DSS</div>
               <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>

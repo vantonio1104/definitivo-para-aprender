@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { formatPrice } from '../data/products';
+import { sanitizeInput } from '../utils/validation';
 
 const CATEGORIES = ['Casual', 'Formal', 'Deportiva', 'Lujo'];
 const BADGES = ['', 'Bestseller', 'Exclusivo', 'Premium'];
@@ -84,8 +85,14 @@ export default function AdminPanel({ products = [], onAdd, onUpdate, onDelete, t
       setErrors(errs);
       return;
     }
+    // Sanitizar campos de texto contra inyección de código (mismo patrón que AuthSection/ContactForm)
     const data = { 
       ...form, 
+      name: sanitizeInput(form.name),
+      img: sanitizeInput(form.img),
+      badge: sanitizeInput(form.badge),
+      marca: sanitizeInput(form.marca),
+      materiales: sanitizeInput(form.materiales),
       price: Number(form.price),
       stock: Number(form.stock) || 0
     };
