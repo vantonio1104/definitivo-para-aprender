@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // ============================================
 // SCRIPT DE TESTING - Panel de Accesibilidad
 // ============================================
@@ -232,7 +233,7 @@ function checkAccessibility() {
   console.log(`%cButtons con ARIA labels: ${buttons.length}`, 'color: blue;');
   
   let allHaveAriaLabel = true;
-  buttons.forEach((btn, index) => {
+  buttons.forEach((btn) => {
     const hasLabel = btn.getAttribute('aria-label') || btn.textContent.trim().length > 0;
     if (!hasLabel) allHaveAriaLabel = false;
   });

@@ -10,78 +10,39 @@
  * - Aplica estilos dinámicos al documento raíz
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import '../styles/accessibility.css';
+
+// Función auxiliar para cargar la configuración inicial de localStorage de forma segura
+const getSavedSettings = () => {
+  try {
+    const settings = localStorage.getItem('accessibilitySettings');
+    return settings ? JSON.parse(settings) : null;
+  } catch (error) {
+    console.warn('Error al cargar configuración de accesibilidad:', error);
+    return null;
+  }
+};
 
 const AccessibilityMenu = () => {
   // Estado para controlar la apertura/cierre del menú
   const [isOpen, setIsOpen] = useState(false);
 
-  // Estados de configuración de accesibilidad
-  const [fontSize, setFontSize] = useState(100); // Porcentaje de tamaño base
-  const [contrast, setContrast] = useState('normal'); // normal, high, inverted, grayscale
-  const [letterSpacing, setLetterSpacing] = useState(0); // en px
-  const [lineHeight, setLineHeight] = useState(1.5); // múltiplo
-  const [dyslexiaFont, setDyslexiaFont] = useState(false); // boolean
-  const [highlightLinks, setHighlightLinks] = useState(false); // boolean
-  const [highlightHeadings, setHighlightHeadings] = useState(false); // boolean
-  const [largeCursor, setLargeCursor] = useState(false); // boolean
-  const [stopAnimations, setStopAnimations] = useState(false); // boolean
-
-  // Cargar configuraciones guardadas en localStorage al montar el componente
-  useEffect(() => {
-    loadAccessibilitySettings();
-  }, []);
-
-  // Aplicar cambios de accesibilidad cuando cambian los estados
-  useEffect(() => {
-    applyAccessibilitySettings();
-  }, [fontSize, contrast, letterSpacing, lineHeight, dyslexiaFont, highlightLinks, highlightHeadings, largeCursor, stopAnimations]);
+  // Estados de configuración de accesibilidad (inicializados de forma diferida desde localStorage)
+  const [fontSize, setFontSize] = useState(() => getSavedSettings()?.fontSize || 100);
+  const [contrast, setContrast] = useState(() => getSavedSettings()?.contrast || 'normal');
+  const [letterSpacing, setLetterSpacing] = useState(() => getSavedSettings()?.letterSpacing || 0);
+  const [lineHeight, setLineHeight] = useState(() => getSavedSettings()?.lineHeight || 1.5);
+  const [dyslexiaFont, setDyslexiaFont] = useState(() => getSavedSettings()?.dyslexiaFont || false);
+  const [highlightLinks, setHighlightLinks] = useState(() => getSavedSettings()?.highlightLinks || false);
+  const [highlightHeadings, setHighlightHeadings] = useState(() => getSavedSettings()?.highlightHeadings || false);
+  const [largeCursor, setLargeCursor] = useState(() => getSavedSettings()?.largeCursor || false);
+  const [stopAnimations, setStopAnimations] = useState(() => getSavedSettings()?.stopAnimations || false);
 
   /**
-   * Carga las configuraciones guardadas en localStorage
+   * Aplica los estilos de accesibilidad al documento raíz y guarda en localStorage
    */
-  const loadAccessibilitySettings = () => {
-    try {
-      const settings = JSON.parse(localStorage.getItem('accessibilitySettings'));
-      if (settings) {
-        setFontSize(settings.fontSize || 100);
-        setContrast(settings.contrast || 'normal');
-        setLetterSpacing(settings.letterSpacing || 0);
-        setLineHeight(settings.lineHeight || 1.5);
-        setDyslexiaFont(settings.dyslexiaFont || false);
-        setHighlightLinks(settings.highlightLinks || false);
-        setHighlightHeadings(settings.highlightHeadings || false);
-        setLargeCursor(settings.largeCursor || false);
-        setStopAnimations(settings.stopAnimations || false);
-      }
-    } catch (error) {
-      console.warn('Error al cargar configuración de accesibilidad:', error);
-    }
-  };
-
-  /**
-   * Guarda las configuraciones en localStorage
-   */
-  const saveAccessibilitySettings = () => {
-    const settings = {
-      fontSize,
-      contrast,
-      letterSpacing,
-      lineHeight,
-      dyslexiaFont,
-      highlightLinks,
-      highlightHeadings,
-      largeCursor,
-      stopAnimations,
-    };
-    localStorage.setItem('accessibilitySettings', JSON.stringify(settings));
-  };
-
-  /**
-   * Aplica los estilos de accesibilidad al documento raíz
-   */
-  const applyAccessibilitySettings = () => {
+  const applyAccessibilitySettings = useCallback(() => {
     const root = document.documentElement;
     
     // Aplicar tamaño de fuente
@@ -150,9 +111,24 @@ const AccessibilityMenu = () => {
       root.classList.remove('accessibility-no-animations');
     }
 
-    // Guardar configuración
-    saveAccessibilitySettings();
-  };
+    // Guardar configuración en localStorage
+    try {
+      const settings = {
+        fontSize,
+        contrast,
+        letterSpacing,
+        lineHeight,
+        dyslexiaFont,
+        highlightLinks,
+        highlightHeadings,
+        largeCursor,
+        stopAnimations,
+      };
+      localStorage.setItem('accessibilitySettings', JSON.stringify(settings));
+    } catch (error) {
+      console.warn('Error al guardar configuración de accesibilidad:', error);
+    }
+  }, [fontSize, contrast, letterSpacing, lineHeight, dyslexiaFont, highlightLinks, highlightHeadings, largeCursor, stopAnimations]);
 
   /**
    * Aumenta el tamaño de fuente en 10%
@@ -217,6 +193,11 @@ const AccessibilityMenu = () => {
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
+
+  // Aplicar cambios de accesibilidad cuando cambian los estados
+  useEffect(() => {
+    applyAccessibilitySettings();
+  }, [applyAccessibilitySettings]);
 
   return (
     <>

@@ -12,9 +12,16 @@
 import { useState } from 'react';
 import { formatPrice } from '../data/products';
 import { useEmailJS } from '../hooks/useEmailJS';
+import { validateEmail } from '../utils/validation';
+import { REGIONES, UMBRAL_ENVIO_GRATIS } from '../data/shipping';
 
 const PAY_METHODS = ['Tarjeta Crédito', 'Tarjeta Débito', 'WebPay', 'Transferencia'];
-const CITIES = ['Santiago', 'Valparaíso', 'Viña del Mar', 'Concepción', 'Antofagasta'];
+
+// Función utilitaria para construir la URL pública de la imagen
+const getPublicImageUrl = (ruta) => {
+  if (!ruta) return '';
+  return `https://raw.githubusercontent.com/vantonio1104/definitivo-para-aprender/main/Pagina_React_Final/public${ruta}`;
+};
 
 export default function Checkout({ cart, total, onPaySuccess, toast }) {
   const [step, setStep] = useState(1); // 1 = datos/envío, 2 = pago
@@ -26,7 +33,8 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
   const [ckEmail, setCkEmail] = useState('');
   const [ckPhone, setCkPhone] = useState('');
   const [ckAddr, setCkAddr] = useState('');
-  const [ckCity, setCkCity] = useState(CITIES[0]);
+  const [ckRegion, setCkRegion] = useState(REGIONES[0].codigo);
+  const [ckComuna, setCkComuna] = useState('');
   const [ckZip, setCkZip] = useState('');
 
   // Datos de pago (paso 2)
@@ -39,10 +47,19 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
   // Hook de EmailJS: solo lo necesitamos para enviar el comprobante de pedido
   const { enviarCorreoPedido } = useEmailJS();
 
-  // Pasa al paso 2 si los campos obligatorios están completos
+  // Cálculos dinámicos de costos (Región y Envío gratis)
+  const selectedRegion = REGIONES.find((r) => r.codigo === ckRegion);
+  const shippingCost = total >= UMBRAL_ENVIO_GRATIS ? 0 : (selectedRegion ? selectedRegion.tarifa : 0);
+  const grandTotal = total + shippingCost;
+
+  // Pasa al paso 2 si los campos obligatorios están completos y son válidos
   const goStep2 = () => {
-    if (!ckName.trim() || !ckEmail.trim() || !ckAddr.trim()) {
+    if (!ckName.trim() || !ckEmail.trim() || !ckAddr.trim() || !ckComuna.trim()) {
       toast('Completa los datos de envío antes de continuar.');
+      return;
+    }
+    if (!validateEmail(ckEmail)) {
+      toast('Ingresa un correo electrónico válido.');
       return;
     }
     setStep(2);
@@ -72,42 +89,43 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
     // 1. Mostramos el modal de éxito INMEDIATAMENTE (no esperamos el correo)
     setShowSuccess(true);
 
-    // 2. Generamos un número de pedido único basado en timestamp
-    const numeroPedido = 'VL-' + Date.now();
-    const fechaPedido = new Date().toLocaleString('es-CL');
+    // 2. Generamos el identificador del pedido e IVA
+    const orderId = 'VL-' + Date.now();
+    const costTax = Math.round(total * 0.19);
 
-    // 3. Armamos la lista de productos como texto plano para el template
-    //    (EmailJS no soporta HTML complejo en todos los proveedores de correo)
-    const itemsTexto = cart
-      .map((x) => `• ${x.name} ×${x.qty}  →  ${formatPrice(x.price * x.qty)}`)
-      .join('\n');
-
-    // 4. Armamos el objeto con todas las variables del template de EmailJS
-    //    Los nombres DEBEN coincidir exactamente con {{variable}} en el template
-    const datosPedido = {
-      numero_pedido:  numeroPedido,
-      fecha_pedido:   fechaPedido,
-      nombre_cliente: `${ckName.trim()} ${ckLastname.trim()}`.trim(),
-      email_cliente:  ckEmail.trim(),
-      telefono:       ckPhone.trim() || 'No indicado',
-      direccion:      `${ckAddr}, ${ckCity}${ckZip ? ', CP ' + ckZip : ''}`,
-      metodo_pago:    payMethod,
-      items_texto:    itemsTexto,
-      subtotal:       formatPrice(total),
-      envio:          'Gratis',
-      total:          formatPrice(total),
-      sitio:          'ViceLeteChile',
+    // 3. Armamos el objeto con todas las variables de la plantilla de EmailJS
+    const templateParams = {
+      to_name: `${ckName.trim()} ${ckLastname.trim()}`.trim(),
+      order_id: orderId,
+      orders: cart.map((item) => ({
+        name: item.name,
+        image_url: getPublicImageUrl(item.img),
+        variant: item.marca || 'Estándar',
+        units: item.qty,
+        price: formatPrice(item.price), // Precio unitario formateado CLP
+      })),
+      cost_shipping: shippingCost === 0 ? 'Gratis' : formatPrice(shippingCost),
+      cost_tax: formatPrice(costTax),
+      cost_total: formatPrice(grandTotal),
+      shipping_address: ckAddr.trim(),
+      shipping_region: selectedRegion ? selectedRegion.nombre : '',
+      shipping_comuna: ckComuna.trim(),
+      email: ckEmail.trim(),
+      store_url: window.location.origin,
     };
 
-    // 5. Enviamos el correo en segundo plano (async sin bloquear)
-    //    enviarCorreoPedido devuelve true si tuvo éxito, false si falló
-    const correoEnviado = await enviarCorreoPedido(datosPedido);
-
-    // 6. Toast discreto según resultado del envío
-    if (correoEnviado) {
-      toast(`📧 Confirmación enviada a ${ckEmail.trim()}`);
-    }
-    // Si falló, no mostramos toast de error (el usuario igual compró exitosamente)
+    // 4. Enviamos el correo en segundo plano (async sin bloquear)
+    enviarCorreoPedido(templateParams)
+      .then((correoEnviado) => {
+        if (correoEnviado) {
+          toast(`📧 Confirmación de pedido enviada a ${ckEmail.trim()}`);
+        } else {
+          console.warn('[EmailJS] El envío de correo de confirmación falló o no está configurado.');
+        }
+      })
+      .catch((err) => {
+        console.error('[EmailJS] Error inesperado en el envío de correo:', err);
+      });
   };
 
   // Cierra el modal, limpia el carrito y vuelve arriba
@@ -117,7 +135,7 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
     setStep(1);
     // Limpiamos los campos del formulario para la próxima compra
     setCkName(''); setCkLastname(''); setCkEmail(''); setCkPhone('');
-    setCkAddr(''); setCkCity(CITIES[0]); setCkZip('');
+    setCkAddr(''); setCkRegion(REGIONES[0].codigo); setCkComuna(''); setCkZip('');
     setCkCard(''); setCkExp(''); setCkCvv(''); setCkCardName('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -177,17 +195,21 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
               </div>
               <div className="form-row">
                 <div className="checkout-group">
-                  <label>Ciudad</label>
-                  <select id="ckCity" value={ckCity} onChange={(e) => setCkCity(e.target.value)}>
-                    {CITIES.map((c) => (
-                      <option key={c}>{c}</option>
+                  <label>Región</label>
+                  <select id="ckRegion" value={ckRegion} onChange={(e) => setCkRegion(e.target.value)}>
+                    {REGIONES.map((r) => (
+                      <option key={r.codigo} value={r.codigo}>{r.nombre}</option>
                     ))}
                   </select>
                 </div>
                 <div className="checkout-group">
-                  <label>Código Postal</label>
-                  <input type="text" placeholder="7550000" id="ckZip" value={ckZip} onChange={(e) => setCkZip(e.target.value)} />
+                  <label>Comuna</label>
+                  <input type="text" placeholder="Providencia" id="ckComuna" value={ckComuna} onChange={(e) => setCkComuna(e.target.value)} />
                 </div>
+              </div>
+              <div className="checkout-group">
+                <label>Código Postal</label>
+                <input type="text" placeholder="7550000" id="ckZip" value={ckZip} onChange={(e) => setCkZip(e.target.value)} />
               </div>
               <button className="btn-primary" style={{ width: '100%', border: 'none', marginTop: 8 }} onClick={goStep2}>
                 Continuar al Pago →
@@ -242,7 +264,7 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
                 </button>
                 {/* processPay es async: el modal aparece antes de que el correo termine */}
                 <button className="btn-primary" style={{ flex: 1, border: 'none' }} onClick={processPay}>
-                  Confirmar Compra · <span id="payTotal">{formatPrice(total)}</span>
+                  Confirmar Compra · <span id="payTotal">{formatPrice(grandTotal)}</span>
                 </button>
               </div>
             </div>
@@ -271,11 +293,13 @@ export default function Checkout({ cart, total, onPaySuccess, toast }) {
           </div>
           <div className="order-total-row">
             <span style={{ color: 'var(--gray)', fontSize: '.85em' }}>Envío</span>
-            <span style={{ color: '#4caf50', fontSize: '.85em' }}>Gratis</span>
+            <span style={{ color: shippingCost === 0 ? '#4caf50' : 'var(--white)', fontSize: '.85em' }}>
+              {shippingCost === 0 ? 'Gratis' : formatPrice(shippingCost)}
+            </span>
           </div>
           <div className="order-total-row final">
             <span>Total</span>
-            <span id="oTotal">{formatPrice(total)}</span>
+            <span id="oTotal">{formatPrice(grandTotal)}</span>
           </div>
         </div>
       </div>

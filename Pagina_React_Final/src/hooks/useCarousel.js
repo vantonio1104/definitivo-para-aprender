@@ -31,7 +31,6 @@ export function useCarousel(count) {
   useEffect(() => {
     if (!count) return;
     elapsedRef.current = 0;
-    setProgress(0);
 
     const tickId = window.setInterval(() => {
       elapsedRef.current += TICK;
