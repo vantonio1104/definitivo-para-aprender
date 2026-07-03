@@ -1,36 +1,14 @@
-"""
-login.py — Módulo de autenticación de usuarios
-===============================================
-Valida las credenciales de un operador contra la colección 'usuarios'
-de MongoDB. Las contraseñas se comparan usando bcrypt; nunca se almacena
-ni se compara texto plano.
-
-Referencia normativa: Sección 4.1.6 · Punto G.22 (Conexión segura)
-"""
-
+# Módulo de autenticación de usuarios ComercioTech
 import logging
 from typing import Optional
-
-# pyrefly: ignore [missing-import]
 import bcrypt
-# pyrefly: ignore [missing-import]
 from pymongo.errors import PyMongoError
-
 from config.conexion import get_db
 
 logger = logging.getLogger(__name__)
 
-
 def verificar_password(password_plano: str, hash_almacenado: str) -> bool:
-    """Verifica que una contraseña en texto plano coincida con su hash bcrypt.
-
-    Args:
-        password_plano:   Contraseña ingresada por el usuario (texto plano).
-        hash_almacenado:  Hash bcrypt almacenado en la colección 'usuarios'.
-
-    Returns:
-        bool: True si la contraseña es correcta, False en caso contrario.
-    """
+    # Compara contraseña en texto plano con el hash bcrypt
     try:
         return bcrypt.checkpw(
             password_plano.encode("utf-8"),
@@ -40,29 +18,10 @@ def verificar_password(password_plano: str, hash_almacenado: str) -> bool:
         logger.error("Error al verificar hash bcrypt: %s", e)
         return False
 
-
 def login(usuario: str, password: str) -> Optional[dict]:
-    """Autentica un operador contra la colección 'usuarios' de MongoDB.
-
-    Proceso:
-    1. Busca el documento por nombre de usuario (índice único).
-    2. Verifica que el usuario esté activo.
-    3. Compara la contraseña con el hash bcrypt almacenado.
-    4. Si todo es correcto, retorna el documento del usuario (sin el hash).
-
-    Args:
-        usuario:  Nombre de usuario ingresado.
-        password: Contraseña en texto plano ingresada por el operador.
-
-    Returns:
-        dict | None: Documento del usuario sin 'password_hash' si la
-                     autenticación es exitosa; None si falla.
-    """
-    if not usuario or not usuario.strip():
-        print("  ⚠️  El nombre de usuario no puede estar vacío.")
-        return None
-    if not password:
-        print("  ⚠️  La contraseña no puede estar vacía.")
+    # Autentica un usuario contra la colección 'usuarios'
+    if not usuario or not usuario.strip() or not password:
+        print("  [!] El usuario y la contraseña no pueden estar vacíos.")
         return None
 
     try:
@@ -74,43 +33,32 @@ def login(usuario: str, password: str) -> Optional[dict]:
             return None
 
         if not doc.get("activo", True):
-            print("  ⚠️  Este usuario está desactivado. Contacte al administrador.")
+            print("  [!] Este usuario está desactivado. Contacte al administrador.")
             return None
 
-        hash_bd = doc.get("password_hash", "")
-        if not verificar_password(password, hash_bd):
+        if not verificar_password(password, doc.get("password_hash", "")):
             logger.warning("Login fallido: contraseña incorrecta para '%s'.", usuario)
             return None
 
-        # Autenticación exitosa — retornar datos del usuario sin el hash
-        resultado = {k: v for k, v in doc.items() if k != "password_hash"}
-        logger.info("Login exitoso: usuario '%s' (rol: %s).", usuario, doc.get("rol"))
-        return resultado
+        # Retorna el documento del usuario sin incluir el password_hash
+        return {k: v for k, v in doc.items() if k != "password_hash"}
 
     except PyMongoError as e:
         logger.error("Error de base de datos durante login: %s", e)
-        print(f"  ❌ Error de conexión durante el login: {e}")
+        print(f"  [ERROR] Error de conexion durante el login: {e}")
         return None
 
-
 def solicitar_credenciales() -> tuple[str, str]:
-    """Solicita nombre de usuario y contraseña al operador por consola.
-
-    La contraseña no se oculta (getpass opcional para terminales que lo soporten).
-
-    Returns:
-        tuple[str, str]: (usuario, password) ingresados por el operador.
-    """
-    print("\n" + "═" * 50)
-    print("  🔐  ACCESO AL SISTEMA — ComercioTech")
-    print("═" * 50)
+    # Solicita credenciales de acceso por consola al operador
+    print("\n" + "=" * 50)
+    print("  ACCESO AL SISTEMA -- ComercioTech")
+    print("=" * 50)
     usuario  = input("  Usuario: ").strip()
 
-    # Intentar usar getpass para ocultar la contraseña en terminales compatibles
     try:
         import getpass
-        password = getpass.getpass("  Contraseña: ")
+        password = getpass.getpass("  Contrasena: ")
     except Exception:
-        password = input("  Contraseña: ")
+        password = input("  Contrasena: ")
 
     return usuario, password

@@ -1,14 +1,41 @@
 # Fase 1 — Procedimiento de Instalación de MongoDB en Windows
 ## ComercioTech · Evaluación 4 · MongoDB v8.2.6 Community Edition
 
-**Sistema Operativo:** [Windows OS] (Build 26200) — 64 bits  
+**Sistema Operativo:** [Windows OS] ([Build de Windows]) — 64 bits  
 **Motor:** MongoDB 8.2.6 Community Edition  
-**Fecha de documentación:** 02 de julio de 2026  
-**Referencia normativa:** Sección 4.1.4 · Puntos G.13 y G.16
+**Fecha de documentación:** 02 de julio de 2026
 
-> **Nota de contexto:** MongoDB ya se encuentra instalado en el equipo de trabajo.
-> Este procedimiento documenta el proceso completo tal como debió ejecutarse,
-> permitiendo reproducirlo en un equipo limpio o en un entorno de validación académica.
+---
+
+## 🚀 GUÍA RÁPIDA DE INICIO (Inicio de la Aplicación en la Nube)
+
+Si deseas ejecutar y validar el sistema **ComercioTech** directamente contra la base de datos en la nube (MongoDB Atlas), sigue estos breves pasos en tu consola:
+
+### 1. Configurar Credenciales
+Dentro de la carpeta `ComercioTech/` abre o crea el archivo `.env` y define tu URI de conexión a Atlas:
+```env
+MONGO_URI=mongodb+srv://administrador:Holitas123@cluster0.ugfzrsi.mongodb.net/?appName=Cluster0
+MONGO_DB=comerciotech
+```
+
+### 2. Instalar Librerías (Dependencias Python)
+Abre una terminal en la carpeta `ComercioTech/` y ejecuta el comando de instalación:
+```powershell
+pip install -r requirements.txt
+```
+*(Instalará `pymongo`, `dnspython`, `bcrypt` y `python-dotenv` necesarios para el proyecto).*
+
+### 3. Cargar Usuarios Semilla (Prueba)
+Carga las cuentas de usuario operador de prueba en la base de datos Atlas ejecutando:
+```powershell
+python semilla_usuarios.py
+```
+
+### 4. Lanzar el Sistema
+Inicia la consola interactiva de ComercioTech:
+```powershell
+python main.py
+```
 
 ---
 
@@ -45,10 +72,6 @@ OsBuildNumber      : [Build Number]
 OsArchitecture     : 64 bits
 ```
 
-> 📸 **CAPTURA 1 — Especificaciones del sistema:** Tomar captura de pantalla del
-> resultado del comando anterior en PowerShell mostrando la versión de Windows,
-> número de build y arquitectura del sistema.
-
 ### 1.2 Verificación de Recursos de Hardware
 
 ```powershell
@@ -69,24 +92,19 @@ Get-PSDrive C |
 
 | Componente | Valor Real Detectado | Requisito Mínimo MongoDB 8.x | Estado |
 |---|---|---|---|
-| CPU | Intel Core i5-12450HX (8C / 12T, 2.4 GHz) | 2 núcleos | ✅ Cumple |
-| RAM | 23,73 GB (~24 GB) | 2 GB | ✅ Cumple |
-| Espacio libre C: | 70,64 GB | 4 GB | ✅ Cumple |
+| CPU | [Procesador compatible x86-64] | 2 núcleos | ✅ Cumple |
+| RAM | [RAM compatible] | 2 GB | ✅ Cumple |
+| Espacio libre C: | [Espacio Libre compatible] | 4 GB | ✅ Cumple |
 | Arquitectura | 64 bits (x86-64) | x86-64 | ✅ Cumple |
 | Sistema de archivos | NTFS | NTFS | ✅ Cumple |
-| Windows Build | 26200 | Windows 10 (Build 1903+) | ✅ Cumple |
+| Windows Build | [Build de Windows] | Windows 10 (Build 1903+) | ✅ Cumple |
 
-> 📸 **CAPTURA 2 — Recursos del hardware:** Tomar captura de los tres comandos
-> anteriores con sus resultados en la misma ventana de PowerShell.
 
 ### 1.3 Verificar Ausencia de Instalación Previa Conflictiva
 
 ```powershell
 # Buscar servicio MongoDB previo
 Get-Service -Name "MongoDB" -ErrorAction SilentlyContinue
-
-# Verificar si el puerto 27017 está en uso por otro proceso
-netstat -an | findstr ":27017"
 
 # Buscar MongoDB en programas instalados
 Get-WmiObject -Class Win32_Product |
@@ -130,10 +148,6 @@ El nombre del archivo descargado será:
 mongodb-windows-x86_64-8.2.6-signed.msi
 ```
 
-> 📸 **CAPTURA 3 — Portal de descarga oficial:** Tomar captura de pantalla del
-> navegador mostrando `https://www.mongodb.com/try/download/community` con los
-> parámetros `Version: 8.2.6`, `Platform: Windows`, `Package: MSI` seleccionados,
-> antes de hacer clic en "Download".
 
 ### 2.3 Confirmar la Descarga Completa
 
@@ -149,9 +163,6 @@ Get-Item "$env:USERPROFILE\Downloads\mongodb-windows-x86_64-8.2.6-signed.msi" |
 
 > El archivo MSI de MongoDB 8.2.6 pesa aproximadamente **500–520 MB**.
 
-> 📸 **CAPTURA 4 — Archivo descargado:** Tomar captura mostrando el archivo
-> `mongodb-windows-x86_64-8.2.6-signed.msi` en la carpeta Descargas con su
-> tamaño y fecha de descarga visibles.
 
 ---
 
@@ -201,10 +212,6 @@ if ($resultado.Hash.ToUpper() -eq $hashOficial.ToUpper()) {
 }
 ```
 
-> 📸 **CAPTURA 5 — Verificación de checksum exitosa:** Tomar captura de PowerShell
-> mostrando:
-> - El hash SHA-256 calculado (64 caracteres hexadecimales)
-> - El mensaje en verde **"✅ INTEGRIDAD VERIFICADA"**
 
 > **¿Por qué verificar el checksum?**
 > Un hash SHA-256 distinto al oficial indica que el archivo fue corrompido
@@ -225,16 +232,12 @@ if ($resultado.Hash.ToUpper() -eq $hashOficial.ToUpper()) {
 - Seleccionar **"Ejecutar como administrador"**
 - En el diálogo UAC, hacer clic en **"Sí"**
 
-> 📸 **CAPTURA 6 — Inicio del instalador MSI:** Tomar captura de pantalla del
-> diálogo de bienvenida: **"Welcome to the MongoDB 8.2.6 2008R2Plus SSL Setup Wizard"**.
 
 #### Paso 4.1.2 — Aceptar los Términos de Licencia
 
 - Marcar la casilla **"I accept the terms in the License Agreement"**
 - Hacer clic en **"Next"**
 
-> 📸 **CAPTURA 7 — Aceptación del EULA:** Tomar captura de la pantalla de acuerdo
-> de licencia con la casilla marcada y el botón "Next" activo.
 
 #### Paso 4.1.3 — Seleccionar Tipo de Instalación
 
@@ -242,8 +245,6 @@ if ($resultado.Hash.ToUpper() -eq $hashOficial.ToUpper()) {
   - Incluye: `mongod.exe`, `mongos.exe` y herramientas de administración
 - Hacer clic en **"Next"**
 
-> 📸 **CAPTURA 8 — Tipo de instalación "Complete":** Tomar captura mostrando
-> la opción "Complete" seleccionada en la pantalla "Choose Setup Type".
 
 #### Paso 4.1.4 — Configuración del Servicio de Windows ⭐ (Paso Crítico)
 
@@ -261,9 +262,6 @@ Configurar **exactamente** así:
 
 - Hacer clic en **"Next"**
 
-> 📸 **CAPTURA 9 — Configuración del Servicio:** Tomar captura completa de la
-> pantalla **"Service Configuration"** mostrando todos los campos configurados
-> como se indica. Esta captura es la más importante del procedimiento.
 
 #### Paso 4.1.5 — Instalar MongoDB Compass
 
@@ -271,8 +269,6 @@ Configurar **exactamente** así:
   - Compass es la interfaz gráfica oficial para administrar MongoDB visualmente
 - Hacer clic en **"Next"**
 
-> 📸 **CAPTURA 10 — Opción de Compass marcada:** Tomar captura de la pantalla
-> de Compass con la casilla activada.
 
 #### Paso 4.1.6 — Iniciar la Instalación
 
@@ -280,16 +276,12 @@ Configurar **exactamente** así:
 - Esperar a que la barra de progreso llegue al 100%
 - (Puede aparecer una ventana separada para descargar e instalar MongoDB Compass)
 
-> 📸 **CAPTURA 11 — Instalación en progreso:** Tomar captura de la barra de
-> progreso de instalación del MSI en curso.
 
 #### Paso 4.1.7 — Finalización
 
 - Cuando aparezca **"Completed the MongoDB 8.2.6 Setup Wizard"**
 - Hacer clic en **"Finish"**
 
-> 📸 **CAPTURA 12 — Instalación completada:** Tomar captura de la pantalla final
-> del asistente con el mensaje de éxito.
 
 ---
 
@@ -315,12 +307,6 @@ Start-Service -Name "MongoDB"
 Get-Service -Name "MongoDB" | Select-Object Status
 ```
 
-> 📸 **CAPTURA 13 — Servicio MongoDB activo en PowerShell:** Captura mostrando
-> `Status: Running` y `StartType: Automatic` para el servicio "MongoDB".
->
-> 📸 **CAPTURA 14 — Servicio en services.msc:** Abrir con `Win+R → services.msc`
-> y tomar captura mostrando "MongoDB" en la lista con estado **"En ejecución"**
-> y tipo de inicio **"Automático"**.
 
 ---
 
@@ -368,8 +354,8 @@ Reemplazar el contenido existente con la siguiente configuración:
 # ═══════════════════════════════════════════════════════════════
 #  mongod.cfg — Configuración del Proyecto ComercioTech
 #  MongoDB Community Server 8.2.6
-#  Sistema: [Windows OS] (Build 26200) - 64 bits
-#  CPU: Intel Core i5-12450HX | RAM: 24 GB | Disco libre: 70.64 GB
+#  Sistema: [Windows OS] ([Build de Windows]) - 64 bits
+#  CPU: [CPU] | RAM: [RAM] | Disco libre: [Espacio Libre]
 # ═══════════════════════════════════════════════════════════════
 
 # ─── Almacenamiento de datos ───────────────────────────────────
@@ -396,9 +382,6 @@ net:
 #   authorization: enabled   # Requiere usuario/contraseña para conectarse
 ```
 
-> 📸 **CAPTURA 15 — mongod.cfg configurado:** Tomar captura del Bloc de notas
-> con el archivo `mongod.cfg` abierto, mostrando claramente las secciones
-> `storage.dbPath`, `net.bindIp: 127.0.0.1` y el bloque `security` comentado.
 
 ### 5.3 Crear los Directorios Configurados
 
@@ -420,8 +403,6 @@ Start-Sleep -Seconds 3
 Get-Service -Name "MongoDB" | Select-Object Name, Status
 ```
 
-> 📸 **CAPTURA 16 — Servicio reiniciado con nueva configuración:**
-> Captura mostrando `Status: Running` después del reinicio.
 
 ---
 
@@ -478,12 +459,6 @@ Build Info: {
 }
 ```
 
-> 📸 **CAPTURA 17 — Salida de mongod --version:** Tomar captura de PowerShell
-> mostrando la salida completa del comando `mongod --version` con:
-> - `"version": "8.2.6"` claramente visible
-> - `"distmod": "windows"` confirmando instalación correcta en Windows
->
-> **Esta captura es evidencia directa del requisito G.13 y G.16.**
 
 ### 6.3 Verificar mongosh (Shell Interactivo de MongoDB)
 
@@ -493,7 +468,6 @@ mongosh --version
 # Resultado esperado: 2.x.x (incluido con MongoDB 8.x)
 ```
 
-> 📸 **CAPTURA 18 — Versión de mongosh:** Captura de la versión de mongosh en PowerShell.
 
 ---
 
@@ -519,11 +493,6 @@ For mongosh info see: https://www.mongodb.com/docs/mongodb-shell/
 test>
 ```
 
-> 📸 **CAPTURA 19 — Primera conexión exitosa a MongoDB:** Tomar captura de la
-> terminal mostrando el mensaje de bienvenida completo de mongosh, incluyendo:
-> - `"Connecting to: mongodb://127.0.0.1:27017/"`
-> - `"Using MongoDB: 8.2.6"`
-> - El prompt `test>` indicando conexión activa
 
 ### 7.2 Comandos de Verificación Post-Instalación
 
@@ -549,40 +518,6 @@ show databases
 exit
 ```
 
-> 📸 **CAPTURA 20 — Verificación final en mongosh:** Tomar captura mostrando:
-> - El resultado `{ ok: 1 }` del comando `ping`
-> - La salida de `show databases` listando las tres bases de datos del sistema
->
-> **Esta captura cierra la evidencia del procedimiento de instalación.**
-
----
-
-## 8. Resumen de Capturas de Pantalla Requeridas
-
-| N° | Descripción | Acción / Comando | Evidencia de |
-|---|---|---|---|
-| 📸 1 | Especificaciones del SO | `Get-ComputerInfo` en PowerShell | Windows 10, Build 26200, 64 bits |
-| 📸 2 | Recursos de hardware | Comandos Win32_Processor, RAM, disco | CPU i5-12450HX, 24 GB RAM, 70 GB libres |
-| 📸 3 | Portal de descarga oficial | Navegador en `mongodb.com/try/download/community` | Parámetros: v8.2.6, Windows, MSI |
-| 📸 4 | Archivo MSI descargado | Carpeta Descargas con el instalador | Tamaño ~510 MB, descarga exitosa |
-| 📸 5 | Verificación checksum SHA-256 | `Get-FileHash` en PowerShell | Mensaje "✅ INTEGRIDAD VERIFICADA" |
-| 📸 6 | Inicio del instalador MSI | Pantalla de bienvenida del Setup Wizard | Instalador ejecutado como Administrador |
-| 📸 7 | Aceptación de licencia EULA | Casilla marcada en pantalla EULA | Términos aceptados correctamente |
-| 📸 8 | Tipo de instalación "Complete" | Opción Complete seleccionada | Instalación completa de componentes |
-| 📸 9 | **Configuración del servicio** ⭐ | Pantalla "Service Configuration" completa | MongoDB configurado como servicio Windows |
-| 📸 10 | Opción Compass marcada | Pantalla de MongoDB Compass | Interfaz gráfica incluida en instalación |
-| 📸 11 | Instalación en progreso | Barra de progreso del MSI | Instalación ejecutándose correctamente |
-| 📸 12 | Instalación completada | Pantalla "Completed the Setup Wizard" | Instalación exitosa sin errores |
-| 📸 13 | Servicio activo en PowerShell | `Get-Service MongoDB` | Status: Running, StartType: Automatic |
-| 📸 14 | Servicio en services.msc | Ventana services.msc | MongoDB: En ejecución, inicio Automático |
-| 📸 15 | mongod.cfg configurado | Bloc de notas con archivo abierto | bindIp: 127.0.0.1, configuración aplicada |
-| 📸 16 | Servicio reiniciado | `Restart-Service MongoDB` | Nueva configuración aplicada exitosamente |
-| 📸 17 | **mongod --version** ⭐ | Resultado en PowerShell | Version 8.2.6, distmod: windows |
-| 📸 18 | mongosh --version | Resultado en PowerShell | Shell interactivo versión 2.x.x disponible |
-| 📸 19 | **Primera conexión mongosh** ⭐ | Pantalla de bienvenida completa | Conexión a 127.0.0.1:27017 exitosa |
-| 📸 20 | **Verificación final** ⭐ | `{ping:1}` y `show databases` en mongosh | Servidor respondiendo: `{ ok: 1 }` |
-
-> ⭐ Las capturas marcadas con estrella son las de mayor peso evaluativo.
 
 ---
 

@@ -1,1 +1,1 @@
-"""Paquete de utilidades — ComercioTech."""
+# Paquete de utilidades — ComercioTech

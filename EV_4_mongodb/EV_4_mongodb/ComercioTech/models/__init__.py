@@ -1,1 +1,1 @@
-"""Paquete de modelos de datos — ComercioTech."""
+# Paquete de modelos de datos — ComercioTech

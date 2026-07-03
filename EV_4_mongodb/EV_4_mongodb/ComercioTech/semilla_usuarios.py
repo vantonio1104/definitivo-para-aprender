@@ -1,15 +1,9 @@
-"""
-semilla_usuarios.py — Script para insertar los usuarios de prueba en MongoDB
-==============================================================================
-Genera los hashes bcrypt correctos e inserta a los operadores en la 
-colección 'usuarios' para poder iniciar sesión en ComercioTech.
-"""
-
+# Semilla para insertar usuarios de prueba en MongoDB
 import sys
 import os
 from datetime import datetime, timezone
 
-# Asegurar que importamos desde la ruta correcta
+# Añadir ruta al sys.path para importar correctamente
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import bcrypt
@@ -17,7 +11,7 @@ from config.conexion import get_db, cerrar_conexion
 from pymongo.errors import DuplicateKeyError
 
 def crear_hash(password_plano: str) -> str:
-    """Genera un hash seguro usando bcrypt con 12 rondas."""
+    # Genera un hash bcrypt con salt rounds 12
     return bcrypt.hashpw(
         password_plano.encode('utf-8'), 
         bcrypt.gensalt(rounds=12)
@@ -57,23 +51,22 @@ def insertar_usuarios_prueba():
         }
     ]
 
-    print("\n📦 Insertando usuarios en la base de datos 'comerciotech'...")
+    print("\n[INFO] Insertando usuarios en la base de datos...")
     
-    # Crear el índice único si no existe
     db.usuarios.create_index("usuario", unique=True, name="idx_usuarios_usuario_unique")
 
     insertados = 0
     for u in usuarios_prueba:
         try:
             db.usuarios.insert_one(u)
-            print(f"  ✅ Usuario creado: {u['usuario']} (Rol: {u['rol']})")
+            print(f"  [OK] Usuario creado: {u['usuario']} (Rol: {u['rol']})")
             insertados += 1
         except DuplicateKeyError:
-            print(f"  ⚠️  El usuario '{u['usuario']}' ya existe. Omitiendo.")
+            print(f"  [!] El usuario '{u['usuario']}' ya existe. Omitiendo.")
         except Exception as e:
-            print(f"  ❌ Error al insertar '{u['usuario']}': {e}")
+            print(f"  [ERROR] Error al insertar '{u['usuario']}': {e}")
             
-    print(f"\n🎉 Proceso completado. {insertados} usuarios nuevos agregados.")
+    print(f"\n[OK] Proceso completado. {insertados} usuarios nuevos agregados.")
 
 if __name__ == "__main__":
     try:

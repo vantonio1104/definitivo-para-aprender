@@ -1,1 +1,1 @@
-"""Paquete de operaciones CRUD — ComercioTech."""
+# Paquete de operaciones CRUD — ComercioTech

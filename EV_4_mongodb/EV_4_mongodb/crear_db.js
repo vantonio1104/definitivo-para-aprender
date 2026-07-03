@@ -1,16 +1,13 @@
 // =============================================================
 //  crear_db.js — ComercioTech MongoDB Setup Script
-//  Motor: MongoDB 8.2.6 Community Edition (Windows 10, Build 26200)
+//  Motor: MongoDB (Local o MongoDB Atlas en la Nube)
 //  Autores: ComercioTech · Evaluación 4
 //
-//  EJECUTAR CON:
-//    Sin autenticación (primera vez):
-//      mongosh crear_db.js
+//  EJECUTAR EN LOCAL:
+//    mongosh crear_db.js
 //
-//    Con autenticación habilitada:
-//      mongosh -u superadmin -p --authenticationDatabase admin crear_db.js
-//
-//  REFERENCIA NORMATIVA: Sección 4.1.5 · Puntos G.18, G.19
+//  EJECUTAR EN LA NUBE (MongoDB Atlas):
+//    mongosh "mongodb+srv://<cluster-url>/" --username <usuario> --password <contraseña> crear_db.js
 // =============================================================
 
 // ─────────────────────────────────────────────

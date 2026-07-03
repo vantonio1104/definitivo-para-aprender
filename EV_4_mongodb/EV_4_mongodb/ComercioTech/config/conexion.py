@@ -44,14 +44,14 @@ def get_client(max_reintentos: int = 3, espera_seg: float = 2.0) -> MongoClient:
             )
             cliente.admin.command("ping")
             _client = cliente
-            logger.info("✅ Conexión establecida correctamente.")
+            logger.info("[OK] Conexión establecida correctamente.")
             return _client
         except ServerSelectionTimeoutError:
             logger.warning("MongoDB no responde. Reintentando...")
             if intento < max_reintentos:
                 time.sleep(espera_seg * intento)
         except OperationFailure as e:
-            logger.error("❌ Error de autenticación: %s", e)
+            logger.error("[ERROR] Error de autenticación: %s", e)
             raise
 
     raise ConnectionFailure(f"No se pudo conectar a MongoDB tras {max_reintentos} intentos.")
