@@ -1,6 +1,6 @@
 # Fase 1 — Procedimiento de Instalación de MongoDB en Windows
 ## ComercioTech · Evaluación 4 · MongoDB v8.2.6 Community Edition
-
+**integrantes:** Vicente Letelier, Jorge Ortega y Ignacio Cabello
 **Sistema Operativo:** [Windows OS] ([Build de Windows]) — 64 bits  
 **Motor:** MongoDB 8.2.6 Community Edition  
 **Fecha de documentación:** 02 de julio de 2026
