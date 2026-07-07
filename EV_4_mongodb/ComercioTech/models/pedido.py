@@ -1,47 +1,32 @@
-# Modelo de datos para la entidad Pedido
-from datetime import datetime, timezone
-from typing import Optional
-from bson import ObjectId
+"""
+Modelo de datos para Pedido y su Detalle embebido.
+"""
+from datetime import datetime
+from bson.objectid import ObjectId
+from typing import List, Dict, Any
 
-def nuevo_item_detalle(
-    id_producto: ObjectId,
-    cantidad: int,
-    precio_unitario: float,
-) -> dict:
-    # Crea un subdocumento para un ítem del detalle del pedido
-    return {
-        "id_producto":     id_producto,
-        "cantidad":        int(cantidad),
-        "precio_unitario": float(precio_unitario),
-    }
-
-def calcular_total(detalle: list[dict]) -> float:
-    # Calcula la suma total de cantidad * precio_unitario
-    return round(
-        sum(item["cantidad"] * item["precio_unitario"] for item in detalle),
-        2,
-    )
-
-def nuevo_pedido(
-    id_cliente: ObjectId,
-    detalle: list[dict],
-    direccion_entrega: Optional[str] = None,
-    notas: Optional[str] = None,
-) -> dict:
-    # Crea el documento base de un nuevo pedido en estado 'pendiente'
-    ahora = datetime.now(timezone.utc)
-    doc: dict = {
-        "fecha":      ahora,
-        "estado":     "pendiente",
-        "id_cliente": id_cliente,
-        "detalle":    detalle,
-        "total":      calcular_total(detalle),
-        "historial_estados": [
-            {"estado": "pendiente", "fecha": ahora}
-        ],
-    }
-    if direccion_entrega and direccion_entrega.strip():
-        doc["direccion_entrega"] = direccion_entrega.strip()
-    if notas and notas.strip():
-        doc["notas"] = notas.strip()
-    return doc
+class Pedido:
+    """Clase que representa una transacción de compra (Pedido)."""
+    
+    def __init__(self, id_cliente: ObjectId, detalle: List[Dict[str, Any]], estado: str = "pendiente"):
+        """
+        Inicializa un Pedido.
+        
+        Args:
+            id_cliente (ObjectId): Referencia al documento Cliente.
+            detalle (List[Dict]): Lista de subdocumentos con los productos comprados.
+            estado (str): Estado actual del pedido.
+        """
+        self.fecha = datetime.utcnow()
+        self.estado = estado
+        self.id_cliente = id_cliente
+        self.detalle = detalle
+        
+    def to_dict(self) -> dict:
+        """Convierte a diccionario BSON."""
+        return {
+            "fecha": self.fecha,
+            "estado": self.estado,
+            "id_cliente": self.id_cliente,
+            "detalle": self.detalle
+        }

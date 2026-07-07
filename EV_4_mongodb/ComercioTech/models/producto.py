@@ -1,28 +1,21 @@
-# Modelo de datos para la entidad Producto
-from datetime import datetime, timezone
-from typing import Optional
+"""
+Modelo de datos para Producto.
+"""
 
-def nuevo_producto(
-    nombre: str,
-    precio: float,
-    categoria: str,
-    descripcion: Optional[str] = None,
-    stock: int = 0,
-    activo: bool = True,
-) -> dict:
-    # Crea un diccionario listo para insertar en la colección de productos
-    doc: dict = {
-        "nombre":         nombre,
-        "precio":         float(precio),
-        "categoria":      categoria,
-        "stock":          int(stock),
-        "activo":         activo,
-        "fecha_creacion": datetime.now(timezone.utc),
-    }
-    if descripcion:
-        doc["descripcion"] = descripcion.strip()
-    return doc
-
-def campos_actualizables() -> list[str]:
-    # Lista de campos del producto editables por el usuario
-    return ["nombre", "precio", "categoria", "descripcion", "stock", "activo"]
+class Producto:
+    """Clase que representa un Producto en el catálogo de ComercioTech."""
+    
+    def __init__(self, nombre: str, precio: float, categoria: str, descripcion: str):
+        self.nombre = nombre
+        self.precio = float(precio)
+        self.categoria = categoria
+        self.descripcion = descripcion
+        
+    def to_dict(self) -> dict:
+        """Convierte a diccionario BSON."""
+        return {
+            "nombre": self.nombre,
+            "precio": self.precio,
+            "categoria": self.categoria,
+            "descripcion": self.descripcion
+        }

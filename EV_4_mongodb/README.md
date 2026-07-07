@@ -41,9 +41,9 @@ EV_4_mongodb/
 ## Instrucciones de Inicio Rápido
 
 ### 1. Configurar Variables de Entorno
-Crea o edita el archivo `ComercioTech/.env` y configura la dirección de conexión de MongoDB Atlas:
+El archivo `.env` ya viene incluido y preconfigurado con la URI del clúster en la carpeta `ComercioTech/`:
 ```env
-MONGO_URI=mongodb+srv://<usuario>:<password>@<cluster-url>/comerciotech?retryWrites=true&w=majority
+MONGO_URI=mongodb+srv://administrador:Holitas123@cluster0.ugfzrsi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 MONGO_DB=comerciotech
 MONGO_MAX_POOL_SIZE=10
 MONGO_MIN_POOL_SIZE=2

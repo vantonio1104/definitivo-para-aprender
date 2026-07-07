@@ -1,1 +1,0 @@
-"""Paquete de configuración — ComercioTech."""

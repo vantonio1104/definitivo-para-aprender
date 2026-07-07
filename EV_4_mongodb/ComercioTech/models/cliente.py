@@ -1,26 +1,35 @@
-# Modelo de datos para la entidad Cliente
-from datetime import datetime, timezone
-from typing import Optional
+"""
+Modelo de datos para Cliente.
+"""
 
-def nuevo_cliente(
-    nombre: str,
-    apellido: str,
-    correo: str,
-    telefono: Optional[str] = None,
-    activo: bool = True,
-) -> dict:
-    # Crea un diccionario listo para insertar en la colección de clientes
-    doc: dict = {
-        "nombre":          nombre,
-        "apellido":        apellido,
-        "correo":          correo,
-        "fecha_registro":  datetime.now(timezone.utc),
-        "activo":          activo,
-    }
-    if telefono:
-        doc["telefono"] = telefono
-    return doc
-
-def campos_actualizables() -> list[str]:
-    # Lista de campos del cliente editables por el usuario
-    return ["nombre", "apellido", "correo", "telefono", "activo"]
+class Cliente:
+    """Clase que representa un Cliente en el sistema ComercioTech."""
+    
+    def __init__(self, nombre: str, apellido: str, correo: str, telefono: str):
+        """
+        Inicializa un objeto Cliente.
+        
+        Args:
+            nombre (str): Nombre del cliente.
+            apellido (str): Apellido del cliente.
+            correo (str): Correo electrónico (único).
+            telefono (str): Número de teléfono de contacto.
+        """
+        self.nombre = nombre
+        self.apellido = apellido
+        self.correo = correo
+        self.telefono = telefono
+        
+    def to_dict(self) -> dict:
+        """
+        Convierte el objeto a un diccionario compatible con BSON para inserción.
+        
+        Returns:
+            dict: Representación del cliente.
+        """
+        return {
+            "nombre": self.nombre,
+            "apellido": self.apellido,
+            "correo": self.correo,
+            "telefono": self.telefono
+        }

@@ -1,69 +1,62 @@
-"""Módulo de conexión a MongoDB para ComercioTech."""
+"""
+Módulo de conexión a MongoDB Atlas.
+
+JUSTIFICACIÓN (4.1.6.G.21):
+Se utiliza Python con el driver oficial `pymongo` debido a:
+1. Compatibilidad total con MongoDB Atlas.
+2. Soporte nativo para conexiones SRV (`mongodb+srv://`) y encriptación TLS en tránsito obligatoria.
+3. Rendimiento optimizado y soporte para connection pooling.
+4. Alta mantenibilidad y ecosistema rico para operaciones de bases de datos NoSQL.
+"""
 
 import os
-import time
-import logging
-from typing import Optional
+import sys
 from pymongo import MongoClient
-from pymongo.database import Database
-from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError, ConfigurationError, OperationFailure
+from pymongo.errors import ConnectionFailure, ConfigurationError
 from dotenv import load_dotenv
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-logger = logging.getLogger(__name__)
+# Cargar variables de entorno desde el archivo .env
+load_dotenv()
 
-# Cargar variables de entorno del archivo .env
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
-
-_client: Optional[MongoClient] = None
-
-def get_client(max_reintentos: int = 3, espera_seg: float = 2.0) -> MongoClient:
-    """Obtiene o inicializa el cliente singleton de MongoDB."""
-    global _client
-    if _client is not None:
-        return _client
-
-    uri = os.getenv("MONGO_URI")
-    if not uri:
-        raise ConfigurationError("Falta la variable MONGO_URI en el archivo .env")
-
-    max_pool = int(os.getenv("MONGO_MAX_POOL_SIZE", "10"))
-    min_pool = int(os.getenv("MONGO_MIN_POOL_SIZE", "2"))
-    connect_timeout = int(os.getenv("MONGO_CONNECT_TIMEOUT_MS", "3000"))
-    server_timeout = int(os.getenv("MONGO_SERVER_SELECTION_TIMEOUT_MS", "10000"))
-
-    for intento in range(1, max_reintentos + 1):
-        try:
-            logger.info("Conectando a MongoDB (intento %d/%d)...", intento, max_reintentos)
-            cliente = MongoClient(
-                uri,
-                maxPoolSize=max_pool,
-                minPoolSize=min_pool,
-                connectTimeoutMS=connect_timeout,
-                serverSelectionTimeoutMS=server_timeout,
-            )
-            cliente.admin.command("ping")
-            _client = cliente
-            logger.info("[OK] Conexión establecida correctamente.")
-            return _client
-        except ServerSelectionTimeoutError:
-            logger.warning("MongoDB no responde. Reintentando...")
-            if intento < max_reintentos:
-                time.sleep(espera_seg * intento)
-        except OperationFailure as e:
-            logger.error("[ERROR] Error de autenticación: %s", e)
-            raise
-
-    raise ConnectionFailure(f"No se pudo conectar a MongoDB tras {max_reintentos} intentos.")
-
-def get_db() -> Database:
-    """Retorna la base de datos de ComercioTech."""
-    return get_client()[os.getenv("MONGO_DB", "comerciotech")]
-
-def cerrar_conexion() -> None:
-    """Cierra la conexión activa con MongoDB."""
-    global _client
-    if _client is not None:
-        _client.close()
-        _client = None
-        logger.info("Conexión a MongoDB cerrada.")
+def get_database():
+    """
+    Establece y retorna la conexión a la base de datos 'comerciotech' en MongoDB Atlas.
+    
+    (4.1.6.G.22): La conexión se realiza utilizando la URI proporcionada
+    vía variables de entorno (MONGO_URI), lo que evita credenciales hardcodeadas,
+    soporta reintentos de conexión, pool de conexiones automático y es portátil.
+    
+    Returns:
+        Database: Instancia de la base de datos 'comerciotech' conectada.
+        
+    Raises:
+        SystemExit: Termina la ejecución si no se define la variable o la conexión falla.
+        
+    Ejemplo de uso:
+        db = get_database()
+        clientes = db.clientes.find()
+    """
+    mongo_uri = os.getenv("MONGO_URI")
+    
+    if not mongo_uri:
+        print("ERROR: La variable de entorno MONGO_URI no está definida. Revise su archivo .env")
+        sys.exit(1)
+        
+    try:
+        # Se establece la conexión con la URI segura
+        # El connection pool es manejado automáticamente por pymongo
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        
+        # Validar la conexión (ping)
+        client.admin.command('ping')
+        
+        return client.comerciotech
+    except ConnectionFailure as e:
+        print(f"Error de conexión a MongoDB Atlas: {e}")
+        sys.exit(1)
+    except ConfigurationError as e:
+        print(f"Error de configuración (posible error en formato SRV): {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error inesperado al conectar: {e}")
+        sys.exit(1)
