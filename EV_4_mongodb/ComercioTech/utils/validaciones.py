@@ -29,3 +29,8 @@ def validar_estado_pedido(estado: str) -> bool:
 def validar_cantidad(cantidad: int) -> bool:
     """Valida que la cantidad comprada sea mayor a cero."""
     return cantidad > 0
+
+def validar_telefono(telefono: str) -> bool:
+    """Valida el formato del teléfono mediante Expresión Regular."""
+    patron = r'^\+?[0-9\s\-]{7,20}$'
+    return bool(re.match(patron, telefono))

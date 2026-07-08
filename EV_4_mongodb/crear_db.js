@@ -23,7 +23,7 @@ print("         (MongoDB la crea físicamente al insertar el primer documento)")
 //     sin errores aunque las colecciones ya existan.
 // ─────────────────────────────────────────────
 const coleccionesExistentes = db.getCollectionNames();
-["clientes", "productos", "pedidos", "usuarios"].forEach((col) => {
+["clientes", "productos", "pedidos", "usuarios", "contadores"].forEach((col) => {
   if (coleccionesExistentes.includes(col)) {
     db[col].drop();
     print(`   🗑️  Colección '${col}' eliminada para recreación limpia`);
@@ -46,8 +46,8 @@ db.createCollection("clientes", {
       additionalProperties: true,
       properties: {
         _id: {
-          bsonType: "objectId",
-          description: "Identificador único generado automáticamente por MongoDB"
+          bsonType: "int",
+          description: "Identificador único numérico (empezando en 101)"
         },
         nombre: {
           bsonType: "string",
@@ -102,7 +102,7 @@ db.createCollection("productos", {
       required: ["nombre", "precio", "categoria"],
       additionalProperties: true,   // Permite campos opcionales por categoría
       properties: {
-        _id: { bsonType: "objectId" },
+        _id: { bsonType: "int" },
         nombre: {
           bsonType: "string",
           minLength: 2,
@@ -180,7 +180,7 @@ db.createCollection("pedidos", {
       required: ["fecha", "estado", "id_cliente", "detalle"],
       additionalProperties: true,
       properties: {
-        _id: { bsonType: "objectId" },
+        _id: { bsonType: "int" },
         fecha: {
           bsonType: "date",
           description: "OBLIGATORIO — Timestamp de creación del pedido"
@@ -191,8 +191,8 @@ db.createCollection("pedidos", {
           description: "OBLIGATORIO — Estado actual en el flujo del pedido"
         },
         id_cliente: {
-          bsonType: "objectId",
-          description: "OBLIGATORIO — Referencia (FK) al _id de la colección 'clientes'"
+          bsonType: "int",
+          description: "OBLIGATORIO — Referencia (FK) al _id numérico de la colección 'clientes'"
         },
         detalle: {
           bsonType: "array",
@@ -204,8 +204,8 @@ db.createCollection("pedidos", {
             additionalProperties: false,   // No permite campos extra en subdocumentos
             properties: {
               id_producto: {
-                bsonType: "objectId",
-                description: "Referencia (FK) al _id de 'productos'"
+                bsonType: "int",
+                description: "Referencia (FK) al _id numérico de 'productos'"
               },
               cantidad: {
                 bsonType: "int",
@@ -269,7 +269,7 @@ db.createCollection("usuarios", {
       required: ["usuario", "password_hash", "rol"],
       additionalProperties: false,   // Esquema estricto — no permite campos extra
       properties: {
-        _id: { bsonType: "objectId" },
+        _id: { bsonType: "int" },
         usuario: {
           bsonType: "string",
           minLength: 3,
@@ -368,6 +368,7 @@ print("✅ [5/7] 10 índices creados en 4 colecciones");
 // ── 6a. CLIENTES (4 documentos) ───────────────
 const resClientes = db.clientes.insertMany([
   {
+    _id: 101,
     nombre: "Valentina",
     apellido: "Morales",
     correo: "valentina.morales@gmail.com",
@@ -376,6 +377,7 @@ const resClientes = db.clientes.insertMany([
     activo: true
   },
   {
+    _id: 102,
     nombre: "Rodrigo",
     apellido: "Fernández",
     correo: "rodrigo.fernandez@outlook.com",
@@ -384,6 +386,7 @@ const resClientes = db.clientes.insertMany([
     activo: true
   },
   {
+    _id: 103,
     nombre: "Camila",
     apellido: "Vásquez",
     correo: "camila.vasquez@empresa.cl",
@@ -392,6 +395,7 @@ const resClientes = db.clientes.insertMany([
     activo: true
   },
   {
+    _id: 104,
     nombre: "Andrés",
     apellido: "Soto",
     correo: "andres.soto@gmail.com",
@@ -403,13 +407,14 @@ const resClientes = db.clientes.insertMany([
 print(`✅ [6a/7] Clientes insertados: ${Object.keys(resClientes.insertedIds).length}`);
 
 // Referencias para usar en los pedidos
-const idCliente1 = resClientes.insertedIds[0]; // Valentina Morales
-const idCliente2 = resClientes.insertedIds[1]; // Rodrigo Fernández
-const idCliente3 = resClientes.insertedIds[2]; // Camila Vásquez
+const idCliente1 = 101; // Valentina Morales
+const idCliente2 = 102; // Rodrigo Fernández
+const idCliente3 = 103; // Camila Vásquez
 
 // ── 6b. PRODUCTOS (5 documentos) ──────────────
 const resProductos = db.productos.insertMany([
   {
+    _id: 301,
     nombre: "Laptop Lenovo IdeaPad 3",
     precio: 549990.00,
     categoria: "Electrónica",
@@ -419,6 +424,7 @@ const resProductos = db.productos.insertMany([
     fecha_creacion: new Date("2024-01-10T00:00:00Z")
   },
   {
+    _id: 302,
     nombre: "Zapatillas Running Nike Air Zoom",
     precio: 89990.00,
     categoria: "Ropa y Calzado",
@@ -428,6 +434,7 @@ const resProductos = db.productos.insertMany([
     fecha_creacion: new Date("2024-02-05T00:00:00Z")
   },
   {
+    _id: 303,
     nombre: "Set de Ollas Antiadherentes (6 piezas)",
     precio: 34990.00,
     categoria: "Hogar y Jardín",
@@ -437,6 +444,7 @@ const resProductos = db.productos.insertMany([
     fecha_creacion: new Date("2024-03-01T00:00:00Z")
   },
   {
+    _id: 304,
     nombre: "Bicicleta de Montaña Trek Marlin 5",
     precio: 449990.00,
     categoria: "Deportes",
@@ -446,6 +454,7 @@ const resProductos = db.productos.insertMany([
     fecha_creacion: new Date("2024-04-15T00:00:00Z")
   },
   {
+    _id: 305,
     nombre: "Smartwatch Samsung Galaxy Watch 6",
     precio: 179990.00,
     categoria: "Electrónica",
@@ -469,13 +478,13 @@ const idProducto5 = resProductos.insertedIds[4]; // Smartwatch Samsung
 // Si el precio del producto cambia luego, el pedido histórico permanece correcto.
 const resPedidos = db.pedidos.insertMany([
   {
-    // Pedido 1: Valentina compra laptop + smartwatch → estado ENTREGADO
+    _id: 201,
     fecha: new Date("2025-11-25T10:30:00Z"),
     estado: "entregado",
-    id_cliente: idCliente1,
+    id_cliente: 101,
     detalle: [
-      { id_producto: idProducto1, cantidad: NumberInt(1), precio_unitario: 549990.00 },
-      { id_producto: idProducto5, cantidad: NumberInt(1), precio_unitario: 179990.00 }
+      { id_producto: 301, cantidad: 1, precio_unitario: 549990.00 },
+      { id_producto: 305, cantidad: 1, precio_unitario: 179990.00 }
     ],
     total: 729980.00,
     direccion_entrega: "Av. Providencia 1234, Piso 5, Santiago, RM",
@@ -487,13 +496,13 @@ const resPedidos = db.pedidos.insertMany([
     ]
   },
   {
-    // Pedido 2: Rodrigo compra zapatillas (×2) + ollas → estado PENDIENTE
+    _id: 202,
     fecha: new Date("2026-07-01T16:45:00Z"),
     estado: "pendiente",
-    id_cliente: idCliente2,
+    id_cliente: 102,
     detalle: [
-      { id_producto: idProducto2, cantidad: NumberInt(2), precio_unitario: 89990.00 },
-      { id_producto: idProducto3, cantidad: NumberInt(1), precio_unitario: 34990.00 }
+      { id_producto: 302, cantidad: 2, precio_unitario: 89990.00 },
+      { id_producto: 303, cantidad: 1, precio_unitario: 34990.00 }
     ],
     total: 214970.00,
     direccion_entrega: "Calle Los Leones 456, Ñuñoa, Santiago",
@@ -502,12 +511,12 @@ const resPedidos = db.pedidos.insertMany([
     ]
   },
   {
-    // Pedido 3: Camila compra bicicleta → estado DESPACHADO
+    _id: 203,
     fecha: new Date("2026-06-28T09:00:00Z"),
     estado: "despachado",
-    id_cliente: idCliente3,
+    id_cliente: 103,
     detalle: [
-      { id_producto: idProducto4, cantidad: NumberInt(1), precio_unitario: 449990.00 }
+      { id_producto: 304, cantidad: 1, precio_unitario: 449990.00 }
     ],
     total: 449990.00,
     direccion_entrega: "Pasaje Los Pinos 789, Maipú, Santiago",
@@ -519,12 +528,12 @@ const resPedidos = db.pedidos.insertMany([
     ]
   },
   {
-    // Pedido 4: Valentina cancela pedido de ollas → estado CANCELADO
+    _id: 204,
     fecha: new Date("2026-05-10T12:00:00Z"),
     estado: "cancelado",
-    id_cliente: idCliente1,
+    id_cliente: 101,
     detalle: [
-      { id_producto: idProducto3, cantidad: NumberInt(1), precio_unitario: 34990.00 }
+      { id_producto: 303, cantidad: 1, precio_unitario: 34990.00 }
     ],
     total: 34990.00,
     notas: "Cancelado por duplicidad de compra — solicitud del cliente",
@@ -543,33 +552,37 @@ print(`✅ [6c/7] Pedidos insertados: ${Object.keys(resPedidos.insertedIds).leng
 // NUNCA se almacena la contraseña en texto plano en la base de datos.
 const resUsuarios = db.usuarios.insertMany([
   {
+    _id: 401,
     usuario: "admin_ct",
-    // Hash bcrypt (12 rondas) — contraseña de ejemplo: "Admin2024!"
-    password_hash: "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/lewYi4bUcWj9pFKdG",
+    // Hash bcrypt (12 rondas) — contraseña: "Admin2024!"
+    password_hash: "$2b$12$an.qXBaPBCdlYSLTgAakruxT5M.F3mD6eV9qBQN/hzHFSJ2joDi1C",
     rol: "admin",
     activo: true,
     ultimo_acceso: new Date("2026-07-01T08:00:00Z")
   },
   {
+    _id: 402,
     usuario: "vendedor1",
-    // Hash bcrypt — contraseña de ejemplo: "Vendedor#1"
-    password_hash: "$2b$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+    // Hash bcrypt (12 rondas) — contraseña: "Vendedor#1"
+    password_hash: "$2b$12$mQVjZmc7vJHZQ0cU.bxqqee58kT.1HiloXrVDMz8NckdcNF36jxee",
     rol: "vendedor",
     activo: true,
     ultimo_acceso: new Date("2026-07-02T09:30:00Z")
   },
   {
+    _id: 403,
     usuario: "bodega_ct",
-    // Hash bcrypt — contraseña de ejemplo: "Bodega@2024"
-    password_hash: "$2b$12$n9qreq5/DlV.Va8ieTY7sO3JQT7oFVMcWQPAUYAGrLkFxbf7SZLLS",
+    // Hash bcrypt (12 rondas) — contraseña: "Bodega@2024"
+    password_hash: "$2b$12$3SLpk2DjvY/onlYawDwZ7edZOrDVghOEfXwm3dijyO9bgUvAny5qu",
     rol: "bodega",
     activo: true,
     ultimo_acceso: null
   },
   {
+    _id: 404,
     usuario: "reporter_ct",
-    // Hash bcrypt — contraseña de ejemplo: "Reports01!"
-    password_hash: "$2b$12$k8KBHZMbSXj.pF2r9bE4kOQ4EJ9aA5GKW3zNlD5vWqQjN9Ux.e8vK",
+    // Hash bcrypt (12 rondas) — contraseña: "Reports01!"
+    password_hash: "$2b$12$SsZRXQ4LY5jJQPJOrgqIuOkgrizXD37UNhvs1HA9VRX.g.UvzERDy",
     rol: "reportes",
     activo: true,
     ultimo_acceso: null

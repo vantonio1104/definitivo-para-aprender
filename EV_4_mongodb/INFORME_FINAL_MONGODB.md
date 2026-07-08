@@ -14,30 +14,30 @@
 
 Si deseas ejecutar y validar el sistema **ComercioTech** directamente contra la base de datos en la nube (MongoDB Atlas), sigue estos breves pasos en tu consola:
 
-### 1. Configurar Credenciales
-El archivo `.env` ya viene incluido y preconfigurado con la URI del clúster en la carpeta `ComercioTech/`:
-```env
-MONGO_URI=mongodb+srv://administrador:Holitas123@cluster0.ugfzrsi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
-MONGO_DB=comerciotech
-```
-
-### 2. Instalar Librerías
+### 1. Instalar Librerías
 Abre una terminal en la carpeta `ComercioTech/` y ejecuta:
 ```powershell
 pip install -r requirements.txt
 ```
 
-### 3. Cargar Usuario Semilla
-Carga el administrador de prueba (`admin_ct` / `Holitas123`) ejecutando:
-```powershell
-python semilla_usuarios.py
-```
-
-### 4. Lanzar el Sistema
+### 2. Lanzar el Sistema
 Inicia la consola interactiva de ComercioTech:
 ```powershell
 python main.py
 ```
+
+### 🔑 Cuentas de Acceso (Usuarios Sembrados)
+Los siguientes usuarios son creados automáticamente por el script `crear_db.js`. Cada uno tiene un **rol** que determina las opciones visibles en el menú:
+
+| Usuario | Contraseña | Rol | Acceso en el menú |
+| :--- | :--- | :--- | :--- |
+| `admin_ct` | `Admin2024!` | **admin** | Clientes, Productos, Pedidos, Reportes |
+| `vendedor1` | `Vendedor#1` | **vendedor** | Clientes, Pedidos |
+| `bodega_ct` | `Bodega@2024` | **bodega** | Productos |
+| `reporter_ct` | `Reports01!` | **reportes** | Reportes (solo lectura) |
+
+> **Nota:** Las contraseñas se almacenan como hashes bcrypt 
+`usuarios`. El sistema valida además que el campo `activo` sea `true` antes de permitir el inicio de sesión.
 
 ---
 
@@ -134,16 +134,16 @@ Bajo la **Ley 19.628 (Chile)** sobre privacidad de datos, es mandatorio proteger
 
 #### 6.1 Procedimiento de Creación en Atlas
 El despliegue en MongoDB Atlas consiste en la configuración lógica del Tenant y la seguridad de red.
-> **[Insertar aquí captura del clúster Atlas activo (Dashboard principal)]**
+
 
 1.  **Network Access:** Se implementó una **IP Access List**. En desarrollo, se limitó a las IPs de los desarrolladores. En Producción se debe restringir a las IPs de la VPC del backend.
-    > **[Insertar aquí captura de Network Access con la IP configurada]**
+
 2.  **Database Access:** Se creó un usuario dedicado `app_comerciotech` con el rol limitado `readWrite` únicamente sobre la base de datos operativa, aplicando el principio de mínimo privilegio.
-    > **[Insertar aquí captura del Database Access / Usuario creado]**
+
 
 #### 6.2 Script de Base de Datos y Validaciones (`crear_db.js`)
 Se ha documentado e incluido el script `crear_db.js` que se ejecuta en la terminal local usando `mongosh`. Este script garantiza la consistencia del esquema (`$jsonSchema`) evitando que datos basura entren al modelo NoSQL, definiendo los Data Types correctos y valores mínimos.
-> **[Insertar aquí captura de la ejecución exitosa de crear_db.js en la terminal / mongosh]**
+
 
 #### 6.3 Seguridad (Cifrado)
 Todas las conexiones a Atlas requieren la URL `mongodb+srv://`, forzando el cifrado del canal de transmisión de datos bajo protocolo TLS 1.2+, cumpliendo las normativas de protección del usuario final.
@@ -162,14 +162,14 @@ La estructura modular del proyecto (`ComercioTech/`) separa claramente las respo
 
 #### 7.2 Manejo de la Conexión y `.env`
 Para evitar credenciales estáticas (hardcode), se implementó `python-dotenv`. Esto asegura que el código pueda rotar entre equipos de trabajo sin exponer la clave del clúster de Atlas.
-> **[Insertar aquí captura del archivo .env configurado en el IDE]**
+
 
 #### 7.3 Seguridad de Contraseñas (Login)
 Se desarrolló un módulo `login.py` que consulta la colección `usuarios`. Las validaciones se hacen cruzando la contraseña en texto plano de entrada con el hash criptográfico almacenado en la base de datos, utilizando **bcrypt** (`bcrypt.checkpw`). De esta manera, ni siquiera el DBA conoce las contraseñas reales.
 
 #### 7.4 Desarrollo del CRUD
 Se desarrollaron módulos funcionales CRUD. El flujo técnico más destacado es la inyección de `Pedidos` en `crud_pedidos.py`. El backend valida algorítmicamente (con la ayuda de `utils/validaciones.py`) que la cantidad sea correcta, lee el catálogo de productos y **embebe programáticamente el detalle**, "congelando" el `precio_unitario` actual al construir la transacción final.
-> **[Insertar aquí capturas del menú Python ejecutando creaciones y listados de pedidos/clientes en la consola]**
+
 
 ---
 
@@ -186,7 +186,7 @@ El motor de MongoDB no solo es de almacenamiento operativo (OLTP), sino que proc
 3.  **Promedio de Gasto por Estado de Pedido (Ticket Promedio):**
     *Usa: Múltiples `$group` + `$avg`.*
     KPI vital para la gerencia general que mide cuánto dinero ingresa al comercio en promedio por cada transacción efectuada.
-> **[Insertar aquí captura de pantalla de la salida en consola del reporte de agregaciones ejecutándose]**
+
 
 ---
 

@@ -31,7 +31,6 @@ EV_4_mongodb/
     ├── login.py                     ← Autenticación segura (bcrypt)
     ├── main.py                      ← Entrada principal de la aplicación
     ├── menu.py                      ← Menús interactivos de consola
-    ├── semilla_usuarios.py          ← Carga de usuarios de prueba
     ├── .env                         ← Variables de entorno (con MONGO_URI en la nube)
     └── requirements.txt             ← Dependencias (pymongo, python-dotenv, bcrypt, dnspython)
 ```
@@ -63,10 +62,6 @@ Para inicializar colecciones, índices y datos iniciales en MongoDB Atlas, ejecu
 mongosh "mongodb+srv://<tu_cluster_url>/" --username <usuario> --password <password> crear_db.js
 ```
 
-Luego, inserta los usuarios de prueba en la nube ejecutando:
-```powershell
-python semilla_usuarios.py
-```
 
 ### 4. Ejecutar la Aplicación
 Inicia la consola de administración ejecutando:
