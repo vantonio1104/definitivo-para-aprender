@@ -148,6 +148,28 @@ Se ha documentado e incluido el script `crear_db.js` que se ejecuta en la termin
 #### 6.3 Seguridad (Cifrado)
 Todas las conexiones a Atlas requieren la URL `mongodb+srv://`, forzando el cifrado del canal de transmisión de datos bajo protocolo TLS 1.2+, cumpliendo las normativas de protección del usuario final.
 
+#### 6.4 Política de Respaldo y Recuperación
+
+| Aspecto | Detalle |
+| :--- | :--- |
+| **Frecuencia** | Respaldo completo **diario** (al cierre de operaciones) y respaldo adicional **antes de cada despliegue** a producción. |
+| **Retención** | Se conservan los últimos **7 respaldos diarios** y **4 respaldos semanales** (rotación FIFO). |
+| **Método** | `mongodump` ejecutado manualmente o vía tarea programada (cron / Task Scheduler) mediante el script `respaldo_backup.py`. El tier **M0 Sandbox** de Atlas **no incluye Cloud Backups automáticos**; en producción, al migrar a un tier **M10+**, se recomienda activar **Continuous Cloud Backup** nativo de Atlas, que ofrece snapshots automáticos con restauración point-in-time (PIT). |
+| **Colecciones respaldadas** | `clientes`, `productos`, `pedidos`, `usuarios` |
+| **Ubicación de almacenamiento** | Carpeta local `backups/backup_<fecha_hora>/` en el servidor de operaciones. Se recomienda replicar a un almacenamiento externo (ej. AWS S3, Google Cloud Storage) para garantizar la redundancia geográfica. |
+| **Procedimiento de restauración** | Ejecutar `mongorestore` apuntando al directorio del respaldo deseado: |
+
+```bash
+mongorestore --uri="mongodb+srv://<usuario>:<password>@<cluster-url>/" \
+    --nsInclude="comerciotech.*" \
+    --dir="backups/backup_<fecha_hora>"
+```
+
+| Aspecto | Detalle |
+| :--- | :--- |
+| **Responsable** | El **Administrador de Base de Datos (DBA)** o, en su ausencia, el líder técnico del equipo de desarrollo. |
+| **Validación** | Tras cada respaldo, verificar que los archivos `.bson` y `.metadata.json` existan para cada colección en la carpeta destino. |
+
 ---
 
 ### 7. APLICACIÓN PYTHON: ARQUITECTURA, LOGIN Y CRUD
@@ -189,6 +211,8 @@ El motor de MongoDB no solo es de almacenamiento operativo (OLTP), sino que proc
 
 
 ---
+
+
 
 ### 9. BUENAS PRÁCTICAS, ASPECTOS ÉTICOS Y NORMATIVOS
 

@@ -79,3 +79,21 @@ python main.py
 | `vendedor1` | `Vendedor#1` | **Vendedor** (Clientes y pedidos) |
 | `bodega_ct` | `Bodega@2024` | **Bodega** (Inventario y productos) |
 | `reporter_ct` | `Reports01!` | **Reportes** (Métricas y listados) |
+
+---
+
+## Respaldo de la Base de Datos
+
+El script `respaldo_backup.py` (en la raíz del proyecto) permite generar un respaldo completo de las colecciones `clientes`, `productos`, `pedidos` y `usuarios` usando `mongodump`.
+
+**Prerrequisito:** Tener [MongoDB Database Tools](https://www.mongodb.com/try/download/database-tools) instalado y `mongodump` disponible en el PATH del sistema.
+
+**Ejecución:**
+```powershell
+python respaldo_backup.py
+```
+
+El script:
+1. Lee la `MONGO_URI` desde `ComercioTech/.env`
+2. Exporta cada colección a una carpeta con marca de tiempo: `backups/backup_YYYYMMDD_HHMMSS/`
+3. Imprime un resumen del resultado y el comando equivalente de `mongorestore` para restaurar el respaldo
