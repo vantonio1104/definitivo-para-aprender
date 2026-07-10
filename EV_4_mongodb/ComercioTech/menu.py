@@ -15,6 +15,7 @@ from crud.crud_clientes import leer_clientes, crear_cliente, actualizar_cliente,
 from crud.crud_productos import leer_productos, crear_producto, actualizar_producto, eliminar_producto, buscar_producto_por_codigo
 from crud.crud_pedidos import leer_pedidos, crear_pedido, actualizar_estado_pedido, eliminar_pedido, buscar_pedido_por_codigo
 from utils.validaciones import validar_correo, validar_precio, validar_cantidad, validar_telefono, validar_estado_pedido
+from services.consultas_agregacion import total_vendido_por_cliente, producto_mas_vendido, promedio_gasto_por_pedido
 
 # ─── Funciones de entrada segura ───────────────────────────
 def pedir_precio(mensaje: str) -> float:
